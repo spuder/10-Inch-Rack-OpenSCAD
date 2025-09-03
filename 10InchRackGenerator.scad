@@ -177,16 +177,18 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Array of 10mm holes through the body on the Y axis
     // Helper module for grid of circles
     module air_holes_grid(switch_width, switch_depth, spacing_x=20, spacing_y=20, hole_d=10) {
-        cols = floor(switch_width / spacing_x);
+    cols = floor(switch_width / spacing_x);
         min_z = front_thickness;
-        max_z = switch_depth - hole_d/2;
+        max_z = switch_depth - hole_d;
         rows = floor((max_z - min_z) / spacing_y);
         for (i = [0:cols-1]) {
+            x_pos = i*spacing_x;
             for (j = [0:rows-1]) {
                 y_offset = (i % 2 == 1) ? spacing_y/2 : 0;
                 z_pos = min_z + j*spacing_y + y_offset;
-                if (z_pos + hole_d/2 <= max_z) {
-                    translate([i*spacing_x, z_pos, 0])
+                // Ensure the square is fully inside the bounds
+                if ((x_pos - hole_d/2 >= 0) && (x_pos + hole_d/2 <= switch_width) && (z_pos - hole_d/2 >= min_z) && (z_pos + hole_d/2 <= max_z)) {
+                    translate([x_pos, z_pos, 0])
                         rotate(45)
                             square([hole_d, hole_d], center=true);
                 }
@@ -203,7 +205,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     grid_width = cols * spacing_x;
     x_offset = (rack_size - grid_width) / 2;
     z_offset = front_thickness; // minimum Z
-    translate([x_offset+hole_d, 400, (front_thickness+hole_d)])
+    translate([x_offset, 400, (front_thickness+hole_d)])
         rotate([90,0,0])
             linear_extrude(height = 5000) {
                 air_holes_grid(switch_width, switch_depth, spacing_x, spacing_y, hole_d);
