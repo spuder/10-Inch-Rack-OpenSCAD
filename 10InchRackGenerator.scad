@@ -3,9 +3,12 @@ switch_width = 190.0;
 switch_height = 28.30;
 switch_depth = 100.20;
 
+rack_size = 254.0; // [254.0:10 inch (254.0 mm), ]
+
 /* [Hidden] */
-front_width = 254.0;
 height = 44.45; // 1U
+lip_thickness = 1.0;
+lip_depth = 0.40;
 
 // The main module containing all internal variables
 module switch_mount(switch_width, switch_height, switch_depth) {
@@ -14,19 +17,17 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     front_thickness = 3.0;
     corner_radius = 2.0;
     chassis_edge_radius = 2.0;
-    tolerance = 0.15;
-    cutout_gap = 2.0 + 2 * tolerance;
-    lip_thickness = 1.0;
-    lip_depth = 1.0;
-    side_margin = (front_width - chassis_width) / 2;
+    tolerance = 0.2;
+
+    side_margin = (rack_size - chassis_width) / 2;
     slot_len = 10.0;
     slot_height = 5.5;
     hole_top_y = height - 6.5;
     hole_center_y = height / 2;
     hole_bottom_y = 6.5;
     hole_spacing_x = 236.525;
-    hole_left_x = (front_width - hole_spacing_x) / 2;
-    hole_right_x = (front_width + hole_spacing_x) / 2;
+    hole_left_x = (rack_size - hole_spacing_x) / 2;
+    hole_right_x = (rack_size + hole_spacing_x) / 2;
     
     zip_tie_hole_count = 8;
     zip_tie_hole_width = 1.5;
@@ -37,14 +38,14 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     chassis_depth_indented = chassis_depth_main - zip_tie_indent_depth;
 
     hole_total_width = zip_tie_hole_count * zip_tie_hole_width;
-    space_between_holes = (front_width - hole_total_width) / (zip_tie_hole_count + 1);
+    space_between_holes = (rack_size - hole_total_width) / (zip_tie_hole_count + 1);
 
     $fn = 64;
 
     // Calculated dimensions
-    cutout_w = switch_width + cutout_gap;
-    cutout_h = switch_height + cutout_gap;
-    cutout_x = (front_width - cutout_w) / 2;
+    cutout_w = switch_width + 2 * tolerance;
+    cutout_h = switch_height + 2 * tolerance;
+    cutout_x = (rack_size - cutout_w) / 2;
     cutout_y = (height - cutout_h) / 2;
     
     // Helper modules
@@ -78,7 +79,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         union() {
             // Front panel
             linear_extrude(height = front_thickness) {
-                rounded_rect_2d(front_width, height, corner_radius);
+                rounded_rect_2d(rack_size, height, corner_radius);
             }
             // Chassis body
             translate([side_margin, 0, front_thickness]) {
@@ -89,14 +90,14 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     // Create switch cutout with proper lip
     module switch_cutout() {
-        // Outer cutout (preserves lip)
-        translate([cutout_x, cutout_y, lip_depth]) {
-            cube([cutout_w, cutout_h, chassis_depth_main], center = false);
+        // Main cutout minus lip
+        translate([cutout_x, cutout_y, -tolerance]) { // Start slightly before z=0 to ensure clean cut
+            cube([switch_width - (lip_thickness*2), switch_height - (lip_thickness*2), chassis_depth_main]);
         }
-        // Inner cutout (full depth for switch body)
-        translate([cutout_x + lip_thickness, cutout_y + lip_thickness, 0]) {
-            cube([cutout_w - 2*lip_thickness, cutout_h - 2*lip_thickness, chassis_depth_main], center = false);
-        }
+        
+        // Switch cut out, it is raised up above the lip
+        translate([cutout_x-lip_thickness, cutout_y-lip_thickness, lip_depth])
+            cube([switch_width+(tolerance), switch_height+(tolerance), chassis_depth_main]);
     }
     
     // Create all rack holes
@@ -123,14 +124,14 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     module zip_tie_features() {
         // Zip tie holes
         for (i = [0:zip_tie_hole_count-1]) {
-            x_pos = (front_width - switch_width)/2 + (switch_width/(zip_tie_hole_count+1)) * (i+1);
+            x_pos = (rack_size - switch_width)/2 + (switch_width/(zip_tie_hole_count+1)) * (i+1);
             translate([x_pos, 0, switch_depth]) {
                 cube([zip_tie_hole_width, height, zip_tie_hole_length]);
             }
         }
         
         // Zip tie indents (top and bottom)
-        x_pos = (front_width - switch_width)/2;
+        x_pos = (rack_size - switch_width)/2;
         translate([x_pos, 0, switch_depth]) {
             cube([switch_width, 2, 8]);
         }
@@ -140,7 +141,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     }
     
     // Main assembly - cleaner boolean structure
-    translate([-front_width/2, -height/2, 0]) {
+    translate([-rack_size/2, -height/2, 0]) {
         difference() {
             main_body();
             union() {
