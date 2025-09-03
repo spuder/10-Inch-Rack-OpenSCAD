@@ -4,16 +4,17 @@ switch_height = 28.30;
 switch_depth = 100.20;
 
 rack_size = 254.0; // [254.0:10 inch (254.0 mm), ]
-
+rack_u = 1;
 /* [Hidden] */
-height = 44.45; // 1U
-lip_thickness = 1.0;
-lip_depth = 0.40;
+
 
 // The main module containing all internal variables
 module switch_mount(switch_width, switch_height, switch_depth) {
-    // Hidden parameters - users won't see these
-    chassis_width = 221.5;
+    height = 44.45 * rack_u;
+    lip_thickness = 1.0;
+    lip_depth = 0.40;
+    // TODO: make chassis_width support 6 inch racks
+    chassis_width = min(switch_width + 10, 221.5); // Object must be smaller than 221.5 or it won't fit in slot
     front_thickness = 3.0;
     corner_radius = 2.0;
     chassis_edge_radius = 2.0;
@@ -22,12 +23,6 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     side_margin = (rack_size - chassis_width) / 2;
     slot_len = 10.0;
     slot_height = 5.5;
-    hole_top_y = height - 6.5;
-    hole_center_y = height / 2;
-    hole_bottom_y = 6.5;
-    hole_spacing_x = 236.525;
-    hole_left_x = (rack_size - hole_spacing_x) / 2;
-    hole_right_x = (rack_size + hole_spacing_x) / 2;
     
     zip_tie_hole_count = 8;
     zip_tie_hole_width = 1.5;
@@ -90,31 +85,49 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     // Create switch cutout with proper lip
     module switch_cutout() {
-        // Main cutout minus lip
-        translate([cutout_x, cutout_y, -tolerance]) { // Start slightly before z=0 to ensure clean cut
-            cube([switch_width - (lip_thickness*2), switch_height - (lip_thickness*2), chassis_depth_main]);
+        // Main cutout minus lip (centered)
+        translate([
+            (rack_size - (switch_width - 2*lip_thickness)) / 2,
+            (height - (switch_height - 2*lip_thickness)) / 2,
+            -tolerance
+        ]) {
+            cube([switch_width - 2*lip_thickness, switch_height - 2*lip_thickness, chassis_depth_main]);
         }
-        
-        // Switch cut out, it is raised up above the lip
-        translate([cutout_x-lip_thickness, cutout_y-lip_thickness, lip_depth])
-            cube([switch_width+(tolerance), switch_height+(tolerance), chassis_depth_main]);
+
+        // Switch cutout above the lip (centered)
+        translate([
+            (rack_size - (switch_width + tolerance)) / 2,
+            (height - (switch_height + tolerance)) / 2,
+            lip_depth
+        ]) {
+            cube([switch_width + tolerance, switch_height + tolerance, chassis_depth_main]);
+        }
     }
     
     // Create all rack holes
     module all_rack_holes() {
-        positions = [
-            [hole_left_x, hole_top_y],
-            [hole_left_x, hole_center_y], 
-            [hole_left_x, hole_bottom_y],
-            [hole_right_x, hole_top_y],
-            [hole_right_x, hole_center_y],
-            [hole_right_x, hole_bottom_y]
-        ];
+        // Rack standard: 3 holes per U, with specific positioning
+        // Each U is 44.45mm, holes are at specific positions within each U
+        hole_spacing_x = 236.525; // 10 inch rack, TODO: support 6 inch rack
+        hole_left_x = (rack_size - hole_spacing_x) / 2;
+        hole_right_x = (rack_size + hole_spacing_x) / 2;
         
-        for (pos = positions) {
-            translate([pos[0], pos[1], 0]) {
-                linear_extrude(height = chassis_depth_main) {
-                    capsule_slot_2d(slot_len, slot_height);
+        // Standard rack hole positions within each 1U (44.45mm) unit:
+        // First hole: 6.35mm from top of U
+        // Second hole: 22.225mm from top of U (middle)
+        // Third hole: 38.1mm from top of U (6.35mm from bottom)
+        u_hole_positions = [6.35, 22.225, 38.1]; // positions within each U
+        
+        for (side_x = [hole_left_x, hole_right_x]) {
+            for (u = [0:rack_u-1]) {
+                for (hole_pos = u_hole_positions) {
+                    // Calculate hole position from top of entire rack
+                    hole_y = height - (u * 44.45 + hole_pos);
+                    translate([side_x, hole_y, 0]) {
+                        linear_extrude(height = chassis_depth_main) {
+                            capsule_slot_2d(slot_len, slot_height);
+                        }
+                    }
                 }
             }
         }
