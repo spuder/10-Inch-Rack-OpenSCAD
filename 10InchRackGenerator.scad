@@ -1,10 +1,12 @@
 // Only these parameters will be visible to the user
-switch_width = 190.0;
+switch_width = 190.20;
 switch_height = 28.30;
 switch_depth = 100.20;
 
 rack_size = 254.0; // [254.0:10 inch (254.0 mm), ]
 rack_u = 1;
+
+front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 /* [Hidden] */
 
 
@@ -14,7 +16,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     lip_thickness = 1.0;
     lip_depth = 0.40;
     // TODO: make chassis_width support 6 inch racks
-    chassis_width = min(switch_width + 10, 221.5); // Object must be smaller than 221.5 or it won't fit in slot
+    chassis_width = min(switch_width + 12, 221.5); // Object must be smaller than 221.5 or it won't fit in slot
     front_thickness = 3.0;
     corner_radius = 2.0;
     chassis_edge_radius = 2.0;
@@ -26,10 +28,11 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     zip_tie_hole_count = 8;
     zip_tie_hole_width = 1.5;
-    zip_tie_hole_length = 5.0;
+    zip_tie_hole_length = 5;
     zip_tie_indent_depth = 2;
+    zip_tie_cutout_depth = 7;
 
-    chassis_depth_main = switch_depth + 7;
+    chassis_depth_main = switch_depth + zip_tie_cutout_depth;
     chassis_depth_indented = chassis_depth_main - zip_tie_indent_depth;
 
     hole_total_width = zip_tie_hole_count * zip_tie_hole_width;
@@ -132,6 +135,23 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             }
         }
     }
+
+    // Power wire cutouts: 5mm diameter holes at top and bottom rack hole positions
+    module power_wire_cutouts() {
+        hole_spacing_x = switch_width; // match rack holes
+        hole_left_x = (rack_size - hole_spacing_x) / 2;
+        hole_right_x = (rack_size + hole_spacing_x) / 2;
+        hole_diameter = 7;
+        // Midplane of switch opening
+        mid_y = (height - switch_height) / 2 + switch_height / 2;
+        for (side_x = [hole_left_x, hole_right_x]) {
+            translate([side_x, mid_y, 0]) {
+                linear_extrude(height = chassis_depth_main) {
+                    circle(d=hole_diameter);
+                }
+            }
+        }
+    }
     
     // Create zip tie holes and indents
     module zip_tie_features() {
@@ -146,13 +166,14 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         // Zip tie indents (top and bottom)
         x_pos = (rack_size - switch_width)/2;
         translate([x_pos, 0, switch_depth]) {
-            cube([switch_width, 2, 8]);
+            cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
         }
         translate([x_pos, height-2, switch_depth]) {
-            cube([switch_width, 2, 8]);
+            cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
         }
     }
     
+
     // Main assembly - cleaner boolean structure
     translate([-rack_size/2, -height/2, 0]) {
         difference() {
@@ -161,6 +182,9 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 switch_cutout();
                 all_rack_holes();
                 zip_tie_features();
+                if (front_wire_holes) {
+                    power_wire_cutouts();
+                }
             }
         }
     }
