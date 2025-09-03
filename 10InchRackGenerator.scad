@@ -28,16 +28,17 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     hole_right_x = (front_width + hole_spacing_x) / 2;
     
     // New parameters for the added holes
-    hole_count = 8;
-    hole_width = 1.5;
-    hole_length = 5.0; // The 5mm length of the hole along the Z-axis
-    
-    // New parameter for the chassis depth
-    chassis_depth = switch_depth + 7;
-    
+    zip_tie_hole_count = 8;
+    zip_tie_hole_width = 1.5;
+    zip_tie_hole_length = 5.0; // The 5mm length of the hole along the Z-axis
+    zip_tie_indent_depth = 2; // Depth of the indent for zip ties
+
+    chassis_depth_main = switch_depth + 7; // Main chassis depth
+    chassis_depth_indented = chassis_depth_main - zip_tie_indent_depth; // Indented chassis depth
+
     // Calculate spacing for the holes across the entire part width
-    hole_total_width = hole_count * hole_width;
-    space_between_holes = (front_width - hole_total_width) / (hole_count + 1);
+    hole_total_width = zip_tie_hole_count * zip_tie_hole_width;
+    space_between_holes = (front_width - hole_total_width) / (zip_tie_hole_count + 1);
 
     $fn = 64;
 
@@ -82,10 +83,11 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                         rounded_rect_2d(front_width, height, corner_radius);
                     }
                     translate([side_margin, 0, front_thickness])
-                        cube([chassis_width, height, chassis_depth - front_thickness], center = false);
+                        cube([chassis_width, height, chassis_depth_main - front_thickness], center = false);
                 }
                 
                 // Cut switch hole, but NOT all the way to the front
+                // Leave a small lip to preven switch from falling out the front
                 translate([cutout_x, cutout_y, lip_depth])
                     cube([cutout_w, cutout_h, 200], center = false);
                 
@@ -101,14 +103,25 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 rack_hole(hole_right_x, hole_center_y);
                 rack_hole(hole_right_x, hole_bottom_y);
                 
-                for (i = [0:hole_count -1]) {
+                // Create array of holes for zip ties
+                for (i = [0:zip_tie_hole_count -1]) {
                     // Divide holes evenly across the switch_width, centered in the front panel
-                    x_pos = (front_width - switch_width)/2 + (switch_width/(hole_count+1)) * (i+1);
+                    x_pos = (front_width - switch_width)/2 + (switch_width/(zip_tie_hole_count+1)) * (i+1);
                     y_pos = 0;
                     z_pos = switch_depth;
                     translate([x_pos, y_pos, z_pos])
-                        cube([2,9000,5]);
+                        // Rather than try and preciciely measure how far to extrude holes, just extrude absurd disstance of 9000
+                        cube([zip_tie_hole_width,9000,zip_tie_hole_length]);
                 }
+                
+                // Indent cut for zip ties
+                x_pos = (front_width - switch_width)/2;
+                y_pos = 0;
+                z_pos = switch_depth;
+                translate([x_pos, y_pos, z_pos])
+                    cube([switch_width,2,8]);
+                translate([x_pos, height-2, z_pos])
+                    cube([switch_width,2,8]);
             }
         }
     }
