@@ -26,7 +26,21 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     hole_spacing_x = 236.525;
     hole_left_x = (front_width - hole_spacing_x) / 2;
     hole_right_x = (front_width + hole_spacing_x) / 2;
+    
+    // New parameters for the added holes
+    hole_count = 8;
+    hole_width = 1.5;
+    hole_length = 5.0; // The 5mm length of the hole along the Z-axis
+    
+    // New parameter for the chassis depth
+    chassis_depth = switch_depth + 7;
+    
+    // Calculate spacing for the holes across the entire part width
+    hole_total_width = hole_count * hole_width;
+    space_between_holes = (front_width - hole_total_width) / (hole_count + 1);
+
     $fn = 64;
+
     // Internal Calculations (using the user parameters)
     cutout_w = switch_width + cutout_gap;
     cutout_h = switch_height + cutout_gap;
@@ -34,7 +48,6 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     cutout_y = (height - cutout_h) / 2;
     
     // Helper functions and geometry
-    // This module creates the 2D capsule shape on the XY-plane
     module capsule_slot_2d(L, H) {
         union() {
             translate([-(L-H)/2, -H/2]) square([L-H, H], center=false);
@@ -43,7 +56,6 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
     }
     
-    // Module for rounded rectangle
     module rounded_rect_2d(w, h, r) {
         hull() {
             translate([r, r]) circle(r=r);
@@ -53,7 +65,6 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
     }
     
-    // Module for the rack holes - cut all the way through
     module rack_hole(x_pos, y_pos) {
         translate([x_pos, y_pos, -50]) {
             linear_extrude(height = 200) {
@@ -61,23 +72,20 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             }
         }
     }
-    // Simple approach: build everything then add lip at the end, centered on 0,0
+    
     translate([-front_width/2, -height/2, 0]) {
         union() {
-            // Main body with all cuts
             difference() {
                 // Solid body
                 union() {
-                    // Front plate with rounded corners - exact 3mm thickness
                     linear_extrude(height = front_thickness) {
                         rounded_rect_2d(front_width, height, corner_radius);
                     }
-                    // Chassis behind front plate
                     translate([side_margin, 0, front_thickness])
-                        cube([chassis_width, height, switch_depth - front_thickness], center = false);
+                        cube([chassis_width, height, chassis_depth - front_thickness], center = false);
                 }
                 
-                // Cut switch hole, but NOT all the way to the front - leave lip_depth material
+                // Cut switch hole, but NOT all the way to the front
                 translate([cutout_x, cutout_y, lip_depth])
                     cube([cutout_w, cutout_h, 200], center = false);
                 
@@ -92,9 +100,16 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 rack_hole(hole_right_x, hole_top_y);
                 rack_hole(hole_right_x, hole_center_y);
                 rack_hole(hole_right_x, hole_bottom_y);
+                
+                for (i = [0:hole_count -1]) {
+                    // Divide holes evenly across the switch_width, centered in the front panel
+                    x_pos = (front_width - switch_width)/2 + (switch_width/(hole_count+1)) * (i+1);
+                    y_pos = 0;
+                    z_pos = switch_depth;
+                    translate([x_pos, y_pos, z_pos])
+                        cube([2,9000,5]);
+                }
             }
-            
-            // No need to add anything - the lip is created by the cutting pattern above
         }
     }
 }
