@@ -7,6 +7,7 @@ rack_size = 254.0; // [254.0:10 inch (254.0 mm), ]
 rack_u = 1;
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
+air_holes = false; // [true:Show air holes, false:Hide air holes]
 /* [Hidden] */
 
 
@@ -173,6 +174,41 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
     }
     
+    // Array of 10mm holes through the body on the Y axis
+    // Helper module for grid of circles
+    module air_holes_grid(switch_width, switch_depth, spacing_x=20, spacing_y=20, hole_d=10) {
+        cols = floor(switch_width / spacing_x);
+        min_z = front_thickness;
+        max_z = switch_depth - hole_d/2;
+        rows = floor((max_z - min_z) / spacing_y);
+        for (i = [0:cols-1]) {
+            for (j = [0:rows-1]) {
+                y_offset = (i % 2 == 1) ? spacing_y/2 : 0;
+                z_pos = min_z + j*spacing_y + y_offset;
+                if (z_pos + hole_d/2 <= max_z) {
+                    translate([i*spacing_x, z_pos, 0])
+                        rotate(45)
+                            square([hole_d, hole_d], center=true);
+                }
+            }
+        }
+    }
+
+    module air_holes() {
+    // Calculate grid width and height
+    spacing_x = 12;
+    spacing_y = 20;
+    hole_d = 10;
+    cols = floor(switch_width / spacing_x);
+    grid_width = cols * spacing_x;
+    x_offset = (rack_size - grid_width) / 2;
+    z_offset = front_thickness; // minimum Z
+    translate([x_offset+hole_d, 400, (front_thickness+hole_d)])
+        rotate([90,0,0])
+            linear_extrude(height = 5000) {
+                air_holes_grid(switch_width, switch_depth, spacing_x, spacing_y, hole_d);
+            }
+    }
 
     // Main assembly - cleaner boolean structure
     translate([-rack_size/2, -height/2, 0]) {
@@ -184,6 +220,9 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 zip_tie_features();
                 if (front_wire_holes) {
                     power_wire_cutouts();
+                }
+                if (air_holes) {
+                    air_holes();
                 }
             }
         }
