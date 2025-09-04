@@ -16,8 +16,6 @@ height = 44.45 * rack_u;
 // The main module containing all internal variables
 module switch_mount(switch_width, switch_height, switch_depth) {
     
-    lip_thickness = 1.0;
-    lip_depth = 0.40;
     // TODO: make chassis_width support 6 inch racks
     chassis_width = min(switch_width + 12, 221.5); // Object must be smaller than 221.5 or it won't fit in 10 slot
     front_thickness = 3.0;
@@ -88,6 +86,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     // Create switch cutout with proper lip
     module switch_cutout() {
+        lip_thickness = 1.2;
+        lip_depth = 0.60;
         // Main cutout minus lip (centered)
         translate([
             (rack_size - (cutout_w - 2*lip_thickness)) / 2,
@@ -142,8 +142,6 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Power wire cutouts: 5mm diameter holes at top and bottom rack hole positions
     module power_wire_cutouts() {
         hole_spacing_x = switch_width; // match rack holes
-        hole_left_x = (rack_size - hole_spacing_x) / 2;
-        hole_right_x = (rack_size + hole_spacing_x) / 2;
         hole_diameter = 7;
         hole_left_x = (rack_size - hole_spacing_x) / 2 - (hole_diameter /5);
         hole_right_x = (rack_size + hole_spacing_x) / 2 + (hole_diameter /5);
