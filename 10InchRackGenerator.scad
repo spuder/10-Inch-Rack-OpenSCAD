@@ -3,13 +3,13 @@ switch_width = 190.20;
 switch_height = 28.30;
 switch_depth = 100.20;
 
-rack_size = 254.0; // [254.0:10 inch]
 rack_u = 1;
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = false; // [true:Show air holes, false:Hide air holes]
 
 /* [Hidden] */
+rack_size = 254.0; // [ 254.0:10 inch (254.0 mm)]
 height = 44.45 * rack_u;
 
 // The main module containing all internal variables
