@@ -1,6 +1,5 @@
 // Only these parameters will be visible to the user
-switch_width = 190.20;
-switch_height = 28.30;
+rack_size = 254.0; // [ 254.0:10 inch (254.0 mm), 152.4:6 inch (152.4 mm)]
 switch_depth = 100.20;
 
 rack_u = 1;
@@ -10,14 +9,14 @@ air_holes = false; // [true:Show air holes, false:Hide air holes]
 
 
 /* [Hidden] */
-rack_size = 254.0; // [ 254.0:10 inch (254.0 mm)]
 height = 44.45 * rack_u;
 
 // The main module containing all internal variables
 module switch_mount(switch_width, switch_height, switch_depth) {
-    
-    // TODO: make chassis_width support 6 inch racks
-    chassis_width = min(switch_width + 12, 221.5); // Object must be smaller than 221.5 or it won't fit in 10 slot
+
+    //6 inch racks (mounts=152.4mm; rails=15.875mm; usable space=120.65mm)
+    //10 inch racks (mounts=254.0mm; rails=15.875mm; usable space=221.5mm)
+    chassis_width = min(switch_width + 12, (rack_size == 152.4) ? 120.65 : 221.5);
     front_thickness = 3.0;
     corner_radius = 2.0;
     chassis_edge_radius = 2.0;
@@ -111,12 +110,14 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     module all_rack_holes() {
         // Rack standard: 3 holes per U, with specific positioning
         // Each U is 44.45mm, holes are at specific positions within each U
-        hole_spacing_x = 236.525; // 10 inch rack, TODO: support 6 inch rack
+        hole_spacing_x = (rack_size == 152.4) ? 136.526 : 236.525; // 6 inch : 10 inch rack
         hole_left_x = (rack_size - hole_spacing_x) / 2;
         hole_right_x = (rack_size + hole_spacing_x) / 2;
 
-        slot_len = 10.0;
-        slot_height = 7.0;
+        // 10 inch rack = 10x7mm oval
+        // 6 inchr rack = 3.25 x 6.5mm oval
+        slot_len = (rack_size == 152.4) ? 6.5 : 10.0;
+        slot_height = (rack_size == 152.4) ? 3.25 : 7.0;
 
         // Standard rack hole positions within each 1U (44.45mm) unit:
         // First hole: 6.35mm from top of U
