@@ -8,12 +8,13 @@ rack_u = 1;
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = false; // [true:Show air holes, false:Hide air holes]
-/* [Hidden] */
 
+/* [Hidden] */
+height = 44.45 * rack_u;
 
 // The main module containing all internal variables
 module switch_mount(switch_width, switch_height, switch_depth) {
-    height = 44.45 * rack_u;
+    
     lip_thickness = 1.0;
     lip_depth = 0.40;
     // TODO: make chassis_width support 6 inch racks
@@ -21,7 +22,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     front_thickness = 3.0;
     corner_radius = 2.0;
     chassis_edge_radius = 2.0;
-    tolerance = 0.2;
+    tolerance = 0.25;
 
     side_margin = (rack_size - chassis_width) / 2;
     slot_len = 10.0;
@@ -42,8 +43,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     $fn = 64;
 
     // Calculated dimensions
-    cutout_w = switch_width + 2 * tolerance;
-    cutout_h = switch_height + 2 * tolerance;
+    cutout_w = switch_width + (2 * tolerance);
+    cutout_h = switch_height + (2 * tolerance);
     cutout_x = (rack_size - cutout_w) / 2;
     cutout_y = (height - cutout_h) / 2;
     
@@ -91,20 +92,20 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     module switch_cutout() {
         // Main cutout minus lip (centered)
         translate([
-            (rack_size - (switch_width - 2*lip_thickness)) / 2,
-            (height - (switch_height - 2*lip_thickness)) / 2,
+            (rack_size - (cutout_w - 2*lip_thickness)) / 2,
+            (height - (cutout_h - 2*lip_thickness)) / 2,
             -tolerance
         ]) {
-            cube([switch_width - 2*lip_thickness, switch_height - 2*lip_thickness, chassis_depth_main]);
+            cube([cutout_w - 2*lip_thickness, cutout_h - 2*lip_thickness, chassis_depth_main]);
         }
 
         // Switch cutout above the lip (centered)
         translate([
-            (rack_size - (switch_width + tolerance)) / 2,
-            (height - (switch_height + tolerance)) / 2,
+            (rack_size - cutout_w) / 2,
+            (height - cutout_h) / 2,
             lip_depth
         ]) {
-            cube([switch_width + tolerance, switch_height + tolerance, chassis_depth_main]);
+            cube([cutout_w, cutout_h, chassis_depth_main]);
         }
     }
     
@@ -177,7 +178,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Array of 10mm holes through the body on the Y axis
     // Helper module for grid of circles
     module air_holes_grid(switch_width, switch_depth, spacing_x=20, spacing_y=20, hole_d=10) {
-    cols = floor(switch_width / spacing_x);
+        cols = floor(switch_width / spacing_x);
         min_z = front_thickness;
         max_z = switch_depth - hole_d;
         rows = floor((max_z - min_z) / spacing_y);
@@ -197,19 +198,19 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     }
 
     module air_holes() {
-    // Calculate grid width and height
-    spacing_x = 12;
-    spacing_y = 20;
-    hole_d = 10;
-    cols = floor(switch_width / spacing_x);
-    grid_width = cols * spacing_x;
-    x_offset = (rack_size - grid_width) / 2;
-    z_offset = front_thickness; // minimum Z
-    translate([x_offset, 400, (front_thickness+hole_d)])
-        rotate([90,0,0])
-            linear_extrude(height = 5000) {
-                air_holes_grid(switch_width, switch_depth, spacing_x, spacing_y, hole_d);
-            }
+        // Calculate grid width and height
+        spacing_x = 12;
+        spacing_y = 20;
+        hole_d = 10;
+        cols = floor(switch_width / spacing_x);
+        grid_width = cols * spacing_x;
+        x_offset = (rack_size - grid_width) / 2;
+        z_offset = front_thickness; // minimum Z
+        translate([x_offset, 400, (front_thickness+hole_d)])
+            rotate([90,0,0])
+                linear_extrude(height = 5000) {
+                    air_holes_grid(switch_width, switch_depth, spacing_x, spacing_y, hole_d);
+                }
     }
 
     // Main assembly - cleaner boolean structure
@@ -232,4 +233,6 @@ module switch_mount(switch_width, switch_height, switch_depth) {
 }
 
 // Call the module
-switch_mount(switch_width, switch_height, switch_depth);
+rotate([-90,0,0])
+    translate([0, -height/2, 0])
+        switch_mount(switch_width, switch_height, switch_depth);
