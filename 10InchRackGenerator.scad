@@ -8,6 +8,7 @@ rack_u = 1;
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = false; // [true:Show air holes, false:Hide air holes]
 
+
 /* [Hidden] */
 rack_size = 254.0; // [ 254.0:10 inch (254.0 mm)]
 height = 44.45 * rack_u;
@@ -22,12 +23,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     front_thickness = 3.0;
     corner_radius = 2.0;
     chassis_edge_radius = 2.0;
-    tolerance = 0.25;
+    tolerance = 0.42;
 
-    side_margin = (rack_size - chassis_width) / 2;
-    slot_len = 10.0;
-    slot_height = 5.5;
-    
     zip_tie_hole_count = 8;
     zip_tie_hole_width = 1.5;
     zip_tie_hole_length = 5;
@@ -76,6 +73,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     // Create the main body as a separate module
     module main_body() {
+        side_margin = (rack_size - chassis_width) / 2;
         union() {
             // Front panel
             linear_extrude(height = front_thickness) {
@@ -116,7 +114,10 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         hole_spacing_x = 236.525; // 10 inch rack, TODO: support 6 inch rack
         hole_left_x = (rack_size - hole_spacing_x) / 2;
         hole_right_x = (rack_size + hole_spacing_x) / 2;
-        
+
+        slot_len = 10.0;
+        slot_height = 7.0;
+
         // Standard rack hole positions within each 1U (44.45mm) unit:
         // First hole: 6.35mm from top of U
         // Second hole: 22.225mm from top of U (middle)
@@ -144,6 +145,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         hole_left_x = (rack_size - hole_spacing_x) / 2;
         hole_right_x = (rack_size + hole_spacing_x) / 2;
         hole_diameter = 7;
+        hole_left_x = (rack_size - hole_spacing_x) / 2 - (hole_diameter /5);
+        hole_right_x = (rack_size + hole_spacing_x) / 2 + (hole_diameter /5);
         // Midplane of switch opening
         mid_y = (height - switch_height) / 2 + switch_height / 2;
         for (side_x = [hole_left_x, hole_right_x]) {
