@@ -234,5 +234,5 @@ module switch_mount(switch_width, switch_height, switch_depth) {
 
 // Call the module
 rotate([-90,0,0])
-    translate([0, -height/2, 0])
+    translate([0, -height/2, -switch_depth/2])
         switch_mount(switch_width, switch_height, switch_depth);
