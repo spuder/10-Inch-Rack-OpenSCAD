@@ -3,7 +3,7 @@ switch_width = 190.20;
 switch_height = 28.30;
 switch_depth = 100.20;
 
-rack_size = 254.0; // [254.0:10 inch (254.0 mm), ]
+rack_size = 254.0; // [254.0:10 inch]
 rack_u = 1;
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
@@ -17,7 +17,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     lip_thickness = 1.0;
     lip_depth = 0.40;
     // TODO: make chassis_width support 6 inch racks
-    chassis_width = min(switch_width + 12, 221.5); // Object must be smaller than 221.5 or it won't fit in slot
+    chassis_width = min(switch_width + 12, 221.5); // Object must be smaller than 221.5 or it won't fit in 10 slot
     front_thickness = 3.0;
     corner_radius = 2.0;
     chassis_edge_radius = 2.0;
