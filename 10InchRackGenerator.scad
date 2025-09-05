@@ -1,9 +1,10 @@
 rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
-rack_height = 1.5; // [1:0.5:8]
+rack_height = 1.0; // [0.5:0.5:5]
+half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
 
 switch_width = 194.20;
 switch_depth = 200.20;
-switch_height = 39.30;
+switch_height = 29.30;
 
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
@@ -135,11 +136,13 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 for (hole_pos = u_hole_positions) {
                     // Calculate hole position from top of entire rack
                     hole_y = height - (u * 44.45 + hole_pos);
-                    
-                    // Only create hole if it fits within the actual rack height
-                    // Add a small margin to avoid holes right at the edge
-                    margin = slot_height / 2 + 1; // Half hole height plus 1mm margin
-                    if (hole_y >= margin && hole_y <= height - margin) {
+                    // Always show holes that are at least partially within the rack height
+                    // Always show holes fully inside the rack
+                    fully_inside = (hole_y >= slot_height/2 && hole_y <= height - slot_height/2);
+                    // Show partial holes at edge only if half_height_holes is true
+                    partially_inside = (hole_y + slot_height/2 > 0 && hole_y - slot_height/2 < height);
+                    show_hole = fully_inside || (half_height_holes && partially_inside && !fully_inside);
+                    if (show_hole) {
                         translate([side_x, hole_y, 0]) {
                             linear_extrude(height = chassis_depth_main) {
                                 capsule_slot_2d(slot_len, slot_height);
