@@ -21,7 +21,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     //10 inch racks (mounts=254.0mm; rails=15.875mm; usable space=221.5mm)
     chassis_width = min(switch_width + 12, (rack_width == 152.4) ? 120.65 : 221.5);
     front_thickness = 3.0;
-    corner_radius = 2.0;
+    corner_radius = 4.0;
     chassis_edge_radius = 2.0;
     tolerance = 0.42;
 
