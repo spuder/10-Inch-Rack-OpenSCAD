@@ -183,7 +183,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Simplified air holes with staggered honeycomb pattern on all faces
     module air_holes() {
         hole_d = 16;
-        spacing_x = 20;  // Horizontal spacing (X and Y directions)
+        spacing_x = 15;  // Horizontal spacing (X and Y directions)
         spacing_z = 17;  // Vertical spacing (Z direction) - tighter to match visual density
         margin = 8; // Keep holes away from edges
         
@@ -269,7 +269,9 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                             z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
                             translate([side_x, y_pos, z_pos]) {
                                 rotate([0, 90, 0]) {
-                                    cylinder(h = chassis_width, d = hole_d, $fn = 6);
+                                    rotate([0, 0, 90]) {  // Rotate hexagon 90 degrees to match front/back orientation
+                                        cylinder(h = chassis_width, d = hole_d, $fn = 6);
+                                    }
                                 }
                             }
                         }
