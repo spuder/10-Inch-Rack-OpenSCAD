@@ -1,6 +1,5 @@
 rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
- // Standard '1U' Units 
-rack_height = 1;
+rack_height = 1.5; // [1:0.5:8]
 
 switch_width = 194.20;
 switch_depth = 200.20;
@@ -128,14 +127,23 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         // Third hole: 38.1mm from top of U (6.35mm from bottom)
         u_hole_positions = [6.35, 22.225, 38.1]; // positions within each U
         
+        // Calculate how many full and partial U units we need to consider
+        max_u = ceil(rack_height); // Include partial U units
+        
         for (side_x = [hole_left_x, hole_right_x]) {
-            for (u = [0:rack_height-1]) {
+            for (u = [0:max_u-1]) {
                 for (hole_pos = u_hole_positions) {
                     // Calculate hole position from top of entire rack
                     hole_y = height - (u * 44.45 + hole_pos);
-                    translate([side_x, hole_y, 0]) {
-                        linear_extrude(height = chassis_depth_main) {
-                            capsule_slot_2d(slot_len, slot_height);
+                    
+                    // Only create hole if it fits within the actual rack height
+                    // Add a small margin to avoid holes right at the edge
+                    margin = slot_height / 2 + 1; // Half hole height plus 1mm margin
+                    if (hole_y >= margin && hole_y <= height - margin) {
+                        translate([side_x, hole_y, 0]) {
+                            linear_extrude(height = chassis_depth_main) {
+                                capsule_slot_2d(slot_len, slot_height);
+                            }
                         }
                     }
                 }
