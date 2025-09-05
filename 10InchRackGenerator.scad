@@ -9,6 +9,7 @@ switch_height = 29.30;
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = true; // [true:Show air holes, false:Hide air holes]
+print_orientation = false; // [true: Place on printbed, false: Facing forward]
 
 
 /* [Hidden] */
@@ -238,6 +239,10 @@ module switch_mount(switch_width, switch_height, switch_depth) {
 }
 
 // Call the module
-rotate([-90,0,0])
-    translate([0, -height/2, -switch_depth/2])
-        switch_mount(switch_width, switch_height, switch_depth);
+if (print_orientation) {
+    switch_mount(switch_width, switch_height, switch_depth);
+} else {
+    rotate([-90,0,0])
+        translate([0, -height/2, -switch_depth/2])
+            switch_mount(switch_width, switch_height, switch_depth);
+}
