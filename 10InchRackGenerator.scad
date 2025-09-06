@@ -2,15 +2,15 @@ rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 rack_height = 1.0; // [0.5:0.5:5]
 half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
 
-switch_width = 194.20;
-switch_depth = 200.20;
-switch_height = 29.30;
+switch_width = 104.20;
+switch_depth = 80.20;
+switch_height = 39.30;
 
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
-air_holes = true; // [true:Show air holes, false:Hide air holes]
-print_orientation = true; // [true: Place on printbed, false: Facing forward]
-
+air_holes = false; // [true:Show air holes, false:Hide air holes]
+print_orientation = false; // [true: Place on printbed, false: Facing forward]
+keystones = true; // [true: Place keystone jacks, false: Remove keystone jacks]
 /* [Hidden] */
 height = 44.45 * rack_height;
 
@@ -19,7 +19,9 @@ height = 44.45 * rack_height;
 module switch_mount(switch_width, switch_height, switch_depth) {
     //6 inch racks (mounts=152.4mm; rails=15.875mm; usable space=120.65mm)
     //10 inch racks (mounts=254.0mm; rails=15.875mm; usable space=221.5mm)
-    chassis_width = min(switch_width + 12, (rack_width == 152.4) ? 120.65 : 221.5);
+    // If keystones is true, add 30mm to switch_width
+    effective_switch_width = keystones ? switch_width + 30 : switch_width;
+    chassis_width = min(effective_switch_width + 12, (rack_width == 152.4) ? 120.65 : 221.5);
     front_thickness = 3.0;
     corner_radius = 4.0;
     chassis_edge_radius = 2.0;
@@ -40,7 +42,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     $fn = 64;
 
     // Calculated dimensions
-    cutout_w = switch_width + (2 * tolerance);
+    cutout_w = effective_switch_width + (2 * tolerance);
     cutout_h = switch_height + (2 * tolerance);
     cutout_x = (rack_width - cutout_w) / 2;
     cutout_y = (height - cutout_h) / 2;
@@ -292,6 +294,96 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
     }
 
+    // Complete keystone with embossed triangle
+    module keystone(
+        jack_length=16.5,
+        jack_width=15,
+        wall_height=10,
+        wall_thickness=4,
+        catch_overhang=2,
+        big_clip_clearance=4,
+        small_clip_clearance=6.5
+    ) {
+        small_clip_depth = catch_overhang;
+        big_clip_depth = catch_overhang + 2;
+        outer_length = jack_length + small_clip_depth + big_clip_depth + (wall_thickness * 2);
+        outer_width = jack_width + (wall_thickness * 2);
+
+        difference() { // This is the new, main difference() block
+            union() {
+                difference() {
+                    difference() {
+                        difference() {
+                            cube([outer_length, outer_width, wall_height]);
+                            translate([wall_thickness, wall_thickness, big_clip_clearance]) {
+                                cube([outer_length, jack_width, wall_height]);
+                            }
+                        }
+                        translate([wall_thickness + small_clip_depth, wall_thickness, 0]) {
+                            cube([jack_length, jack_width, wall_height + 1]);
+                        }
+                    }
+                }
+                cube([wall_thickness, outer_width, wall_height]);
+                cube([wall_thickness + small_clip_depth, outer_width, small_clip_clearance]);
+                translate([2, 23, 8]) {
+                    rotate([90, 0, 0])
+                        linear_extrude(height = outer_width)
+                            polygon([
+                                [0,0],
+                                [catch_overhang,0],
+                                [wall_thickness,catch_overhang],
+                                [0,catch_overhang]
+                            ]);
+                }
+                translate([26.5,0,0]) {
+                    cube([4, 23, 10]);
+                }
+                translate([28.5, 0, 8]) {
+                    rotate([0, 0, -180]) {
+                        rotate([90, 0, 0])
+                            linear_extrude(height = outer_width)
+                                polygon([
+                                    [0,0],
+                                    [catch_overhang,0],
+                                    [wall_thickness,catch_overhang],
+                                    [0,catch_overhang]
+                                ]);
+                    }
+                }
+            }
+            
+            // These are the new shapes to be subtracted
+            translate([outer_length-5, outer_width/2, 0]) {
+                rotate([0,0,90])
+                    linear_extrude(height = 0.4) {
+                        polygon([
+                            [0, 2],
+                            [-2, -2],
+                            [2, -2]
+                        ]);
+                    }
+            }
+            
+            // Removed the color() and rotate() from the original code since it was for debug.
+            // It's still a good idea to comment out this section if you want to see the triangle itself.
+            /*
+            color("red")
+                translate([outer_length-5, outer_width/2, 0]) {
+                    rotate([0,0,90])
+                        linear_extrude(height = 2) {
+                            polygon([
+                                [0, 2],
+                                [-2, -2],
+                                [2, -2]
+                            ]);
+                        }
+                }
+            */
+        }
+    }
+
+
     // Main assembly - cleaner boolean structure
     translate([-rack_width/2, -height/2, 0]) {
         difference() {
@@ -305,6 +397,19 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 }
                 if (air_holes) {
                     air_holes();
+                }
+
+            }
+        }
+        if (keystones) {
+            // Move keystone to the left edge of the switch and rotate 90 degrees on Z axis
+            translate([
+                (rack_width - effective_switch_width + 47) / 2, // left edge of switch
+                (height - 28) / 2, // vertically centered for jack_width=15
+                0
+            ]) {
+                rotate([0,0,90]) {
+                    keystone();
                 }
             }
         }
