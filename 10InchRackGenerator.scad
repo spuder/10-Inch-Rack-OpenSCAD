@@ -196,7 +196,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         hole_d = 16;
         spacing_x = 15;  // Horizontal spacing (X and Y directions)
         spacing_z = 17;  // Vertical spacing (Z direction) - tighter to match visual density
-        margin = 8; // Keep holes away from edges
+        margin = 3; // Keep holes away from edges
         
         // BACK FACE HOLES (Y-axis through back)
         // Calculate available space for holes within switch dimensions
