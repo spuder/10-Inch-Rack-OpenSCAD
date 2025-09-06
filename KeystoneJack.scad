@@ -28,8 +28,8 @@ module keystone(
                     }
                 }
             }
-            %cube([wall_thickness, outer_width, wall_height]);
-            %cube([wall_thickness + small_clip_depth, outer_width, small_clip_clearance]);
+            cube([wall_thickness, outer_width, wall_height]);
+            cube([wall_thickness + small_clip_depth, outer_width, small_clip_clearance]);
             translate([2, 23, 8]) {
                 rotate([90, 0, 0])
                     linear_extrude(height = outer_width)
