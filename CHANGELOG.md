@@ -1,5 +1,8 @@
 CHANGELOG.md
 
+## v1.3.0
+- Reduce material usage above/below switch (now walls are 6mm)
+
 ## v1.2.1
 - Allow air holes on smaller parts
 
