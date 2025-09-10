@@ -74,14 +74,15 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Create the main body as a separate module
     module main_body() {
         side_margin = (rack_width - chassis_width) / 2;
+        chassis_height = switch_height + 12;
         union() {
             // Front panel
             linear_extrude(height = front_thickness) {
                 rounded_rect_2d(rack_width, height, corner_radius);
             }
             // Chassis body
-            translate([side_margin, 0, front_thickness]) {
-                rounded_chassis_profile(chassis_width, height, chassis_edge_radius, chassis_depth_main - front_thickness);
+            translate([side_margin, (height - chassis_height) / 2, front_thickness]) {
+                rounded_chassis_profile(chassis_width, chassis_height, chassis_edge_radius, chassis_depth_main - front_thickness);
             }
         }
     }
@@ -183,10 +184,13 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         
         // Zip tie indents (top and bottom)
         x_pos = (rack_width - switch_width)/2;
-        translate([x_pos, 0, switch_depth]) {
+        chassis_height = switch_height + 12;
+        // Bottom indent
+        translate([x_pos, (height - chassis_height)/2, switch_depth]) {
             cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
         }
-        translate([x_pos, height-2, switch_depth]) {
+        // Top indent
+        translate([x_pos, (height + chassis_height)/2 - zip_tie_indent_depth, switch_depth]) {
             cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
         }
     }
