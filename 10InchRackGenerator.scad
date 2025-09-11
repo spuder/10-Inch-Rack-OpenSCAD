@@ -312,13 +312,14 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         big_clip_depth = catch_overhang + 2;
         outer_length = jack_length + small_clip_depth + big_clip_depth + (wall_thickness * 2);
         outer_width = jack_width + (wall_thickness * 2);
+        outer_height_lower = switch_height/2-6; //TODO: make more dynamic
 
         difference() { // This is the new, main difference() block
             union() {
                 difference() {
                     difference() {
                         difference() {
-                            cube([outer_length, outer_width, wall_height]);
+                            cube([outer_length + outer_height_lower, outer_width, wall_height]);
                             translate([wall_thickness, wall_thickness, big_clip_clearance]) {
                                 cube([outer_length, jack_width, wall_height]);
                             }
