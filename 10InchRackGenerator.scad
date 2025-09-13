@@ -195,47 +195,49 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
     }
 
-    // Simplified air holes with staggered honeycomb pattern on all faces
+   // Hexagonal tessellation air holes with proper spacing for pointy-side-up hexagons
     module air_holes() {
         hole_d = 16;
-        spacing_x = 15;  // Horizontal spacing (X and Y directions)
-        spacing_z = 17;  // Vertical spacing (Z direction) - tighter to match visual density
+        
+        // For true hexagonal tessellation (like honeycomb):
+        // Each hexagon should be surrounded by 6 others at equal distances
+        // With pointy-side-up orientation, we need:
+        center_distance = hole_d * 1.1;  // Distance between hexagon centers (adjust this for density)
+        
+        // Convert to rectangular grid coordinates:
+        spacing_x = center_distance * 0.5;
+        spacing_z = center_distance * 0.866025; // sqrt(3)/2
+        
         margin = 3; // Keep holes away from edges
         
         // BACK FACE HOLES (Y-axis through back)
-        // Calculate available space for holes within switch dimensions
         available_width = switch_width - (2 * margin);
         available_depth = switch_depth - (2 * margin);
         
-        // Calculate number of holes that fit
         x_cols = floor(available_width / spacing_x);
         z_rows = floor(available_depth / spacing_z);
         
-        // Calculate actual grid size for centering
         actual_grid_width = (x_cols - 1) * spacing_x;
         actual_grid_depth = (z_rows - 1) * spacing_z;
         
-        // Center the grid within the switch cutout area
         cutout_center_x = rack_width / 2;
         cutout_center_z = front_thickness + switch_depth / 2;
         
         x_start = cutout_center_x - actual_grid_width / 2;
         z_start = cutout_center_z - actual_grid_depth / 2;
         
-        // Create back face holes with VERTICAL staggered pattern
         if (x_cols > 0 && z_rows > 0) {
             for (i = [0:x_cols-1]) {
                 for (j = [0:z_rows-1]) {
-                    // Stagger every other COLUMN (i) instead of row (j) for vertical honeycomb pattern
-                    z_offset = (i % 2 == 1) ? spacing_z/2 : 0;
+                    // Alternate columns are offset by half a row spacing
+                    z_offset = (i % 2 == 1) ? spacing_z * 1 : 0;
                     x_pos = x_start + i * spacing_x;
-                    z_pos = z_start + j * spacing_z + z_offset;
+                    z_pos = z_start + j * spacing_z * 2 + z_offset;  // Use 2x spacing for rows
                     
-                    // Only place hole if it fits within bounds after staggering
                     if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin && 
                         z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
                         translate([x_pos, height, z_pos]) {
-                            rotate([90, 0, 0]) {
+                            rotate([90, 30, 0]) {
                                 cylinder(h = height, d = hole_d, $fn = 6);
                             }
                         }
@@ -245,46 +247,43 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
         
         // SIDE FACE HOLES (X-axis through left and right sides)
-        // Calculate chassis dimensions
         chassis_width = min(switch_width + 12, (rack_width == 152.4) ? 120.65 : 221.5);
         side_margin = (rack_width - chassis_width) / 2;
         
-        // Calculate available space within switch height
         available_height = switch_height - (2 * margin);
         available_side_depth = switch_depth - (2 * margin);
         
-        // Calculate number of holes that fit on sides
-        y_cols = floor(available_height / spacing_x);  // Use spacing_x for Y direction
-        z_rows_side = floor(available_side_depth / spacing_z);
+        // Side faces need different spacing due to 90-degree rotation
+        // Try values between the extremes that caused overlap vs large gaps
+        side_spacing_y = spacing_x * 1;  // Between 0.5 (too close) and 1.2 (too far)
+        side_spacing_z = spacing_z * 1;   // Between 0.866 (overlap) and 1.2 (too far)
         
-        // Calculate actual grid size for sides
-        actual_grid_height = (y_cols - 1) * spacing_x;
-        actual_grid_depth_side = (z_rows_side - 1) * spacing_z;
+        y_cols = floor(available_height / side_spacing_y);
+        z_rows_side = floor(available_side_depth / side_spacing_z);
         
-        // Center the grid within the switch cutout area (Y and Z)
-        cutout_center_y = height / 2;  // Center of the 1U height
+        actual_grid_height = (y_cols - 1) * side_spacing_y;
+        actual_grid_depth_side = (z_rows_side - 1) * side_spacing_z;
+        
+        cutout_center_y = height / 2;
         
         y_start = cutout_center_y - actual_grid_height / 2;
         z_start_side = cutout_center_z - actual_grid_depth_side / 2;
         
-        // Create holes on both left and right sides with VERTICAL staggered pattern
         if (y_cols > 0 && z_rows_side > 0) {
-            for (side = [0, 1]) { // 0 = left side, 1 = right side
+            for (side = [0, 1]) {
                 side_x = side == 0 ? side_margin : rack_width - side_margin;
                 
                 for (i = [0:y_cols-1]) {
                     for (j = [0:z_rows_side-1]) {
-                        // Stagger every other COLUMN (i) instead of row (j) for vertical honeycomb pattern
-                        z_offset = (i % 2 == 1) ? spacing_z/2 : 0;
-                        y_pos = y_start + i * spacing_x;
-                        z_pos = z_start_side + j * spacing_z + z_offset;
+                        z_offset = (i % 2 == 1) ? side_spacing_z : 0;  // Use full spacing offset
+                        y_pos = y_start + i * side_spacing_y;
+                        z_pos = z_start_side + j * side_spacing_z * 2 + z_offset;  // Use 2x spacing like back face
                         
-                        // Only place hole if it fits within bounds after staggering
                         if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin && 
                             z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
                             translate([side_x, y_pos, z_pos]) {
                                 rotate([0, 90, 0]) {
-                                    rotate([0, 0, 90]) {  // Rotate hexagon 90 degrees to match front/back orientation
+                                    rotate([0, 0, 30]) {
                                         cylinder(h = chassis_width, d = hole_d, $fn = 6);
                                     }
                                 }
