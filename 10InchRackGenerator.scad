@@ -2,14 +2,15 @@ rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 rack_height = 1.0; // [0.5:0.5:5]
 half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
 
-switch_width = 194.20;
-switch_depth = 200.20;
-switch_height = 29.30;
+switch_width = 135.0;
+switch_depth = 135.0;
+switch_height = 28.30;
 
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = true; // [true:Show air holes, false:Hide air holes]
 print_orientation = true; // [true: Place on printbed, false: Facing forward]
+tolerance = 0.42;
 
 /* [Hidden] */
 height = 44.45 * rack_height;

@@ -1,5 +1,9 @@
 CHANGELOG.md
 
+## v1.3.1
+- Change default values to USG dimensions
+- Make tolerance a user changable parameter
+
 ## v1.3.0
 - Reduce material usage above/below switch (now walls are 6mm)
 
