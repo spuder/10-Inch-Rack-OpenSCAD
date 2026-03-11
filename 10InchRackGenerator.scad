@@ -7,6 +7,7 @@ switch_depth = 135.0;
 switch_height = 28.30;
 
 case_thickness = 6; // Thickness of case walls
+wire_diameter = 7; // Diameter of power wire holes
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = true; // [true:Show air holes, false:Hide air holes]
@@ -157,18 +158,17 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
     }
 
-    // Power wire cutouts: 5mm diameter holes at top and bottom rack hole positions
+    // Power wire cutouts: configurable diameter holes at top and bottom rack hole positions
     module power_wire_cutouts() {
         hole_spacing_x = switch_width; // match rack holes
-        hole_diameter = 7;
-        hole_left_x = (rack_width - hole_spacing_x) / 2 - (hole_diameter /5);
-        hole_right_x = (rack_width + hole_spacing_x) / 2 + (hole_diameter /5);
+        hole_left_x = (rack_width - hole_spacing_x) / 2 - (wire_diameter /5);
+        hole_right_x = (rack_width + hole_spacing_x) / 2 + (wire_diameter /5);
         // Midplane of switch opening
         mid_y = (height - switch_height) / 2 + switch_height / 2;
         for (side_x = [hole_left_x, hole_right_x]) {
             translate([side_x, mid_y, 0]) {
                 linear_extrude(height = chassis_depth_main) {
-                    circle(d=hole_diameter);
+                    circle(d=wire_diameter);
                 }
             }
         }
