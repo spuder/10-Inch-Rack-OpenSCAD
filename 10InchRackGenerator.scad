@@ -8,6 +8,7 @@ switch_height = 28.30;
 
 case_thickness = 6; // Thickness of case walls
 wire_diameter = 7; // Diameter of power wire holes
+zip_tie_hole_width = 1.5; // Width of zip tie slots
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = true; // [true:Show air holes, false:Hide air holes]
@@ -29,7 +30,6 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     tolerance = 0.42;
 
     zip_tie_hole_count = 8;
-    zip_tie_hole_width = 1.5;
     zip_tie_hole_length = 5;
     zip_tie_indent_depth = 2;
     zip_tie_cutout_depth = 7;
