@@ -1,5 +1,8 @@
 CHANGELOG.md
 
+## v1.6.0
+- Adds variable for wire_diameter
+
 ## v1.5.0
 - Add variable to change case thickness (defaults to 6)
 
