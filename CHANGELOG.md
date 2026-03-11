@@ -1,5 +1,11 @@
 CHANGELOG.md
 
+## v1.5.0
+- Add variable to change case thickness (defaults to 6)
+
+## v1.4.0
+- Initial release of plate generator
+
 ## v1.3.1
 - Change default values to USG dimensions
 - Make tolerance a user changable parameter
