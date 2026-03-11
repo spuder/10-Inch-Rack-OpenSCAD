@@ -6,6 +6,7 @@ switch_width = 135.0;
 switch_depth = 135.0;
 switch_height = 28.30;
 
+case_thickness = 6; // Thickness of case walls
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = true; // [true:Show air holes, false:Hide air holes]
@@ -20,7 +21,7 @@ height = 44.45 * rack_height;
 module switch_mount(switch_width, switch_height, switch_depth) {
     //6 inch racks (mounts=152.4mm; rails=15.875mm; usable space=120.65mm)
     //10 inch racks (mounts=254.0mm; rails=15.875mm; usable space=221.5mm)
-    chassis_width = min(switch_width + 12, (rack_width == 152.4) ? 120.65 : 221.5);
+    chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
     front_thickness = 3.0;
     corner_radius = 4.0;
     chassis_edge_radius = 2.0;
@@ -75,7 +76,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Create the main body as a separate module
     module main_body() {
         side_margin = (rack_width - chassis_width) / 2;
-        chassis_height = switch_height + 12;
+        chassis_height = switch_height + (2 * case_thickness);
         union() {
             // Front panel
             linear_extrude(height = front_thickness) {
@@ -185,7 +186,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         
         // Zip tie indents (top and bottom)
         x_pos = (rack_width - switch_width)/2;
-        chassis_height = switch_height + 12;
+        chassis_height = switch_height + (2 * case_thickness);
         // Bottom indent
         translate([x_pos, (height - chassis_height)/2, switch_depth]) {
             cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
@@ -247,7 +248,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         
         // SIDE FACE HOLES (X-axis through left and right sides)
         // Calculate chassis dimensions
-        chassis_width = min(switch_width + 12, (rack_width == 152.4) ? 120.65 : 221.5);
+        chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
         side_margin = (rack_width - chassis_width) / 2;
         
         // Calculate available space within switch height
