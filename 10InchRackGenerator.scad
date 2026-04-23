@@ -14,6 +14,13 @@ air_holes = true; // [true:Show air holes, false:Hide air holes]
 print_orientation = true; // [true: Place on printbed, false: Facing forward]
 tolerance = 0.42;
 
+keystone_jacks = false;     // [true:Show keystone jacks, false:Hide keystone jacks]
+keystone_count = 2;         // [1:8]
+keystone_side = 1;          // [0:Left of switch, 1:Right of switch, 2:Above switch, 3:Below switch]
+keystone_width = 14.94;     // Standard keystone cutout width
+keystone_height = 16.51;    // Standard keystone cutout height
+keystone_spacing = 3.0;     // Gap between adjacent jacks
+
 /* [Hidden] */
 height = 44.45 * rack_height;
 
@@ -47,7 +54,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     cutout_h = switch_height + (2 * tolerance);
     cutout_x = (rack_width - cutout_w) / 2;
     cutout_y = (height - cutout_h) / 2;
-    
+
     // Helper modules
     module capsule_slot_2d(L, H) {
         hull() {
@@ -55,7 +62,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             translate([L/2 - H/2, 0]) circle(r=H/2);
         }
     }
-    
+
     module rounded_rect_2d(w, h, r) {
         hull() {
             translate([r, r]) circle(r=r);
@@ -73,7 +80,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             translate([width - radius, height - radius, 0]) cylinder(h = depth, r = radius);
         }
     }
-    
+
     // Create the main body as a separate module
     module main_body() {
         side_margin = (rack_width - chassis_width) / 2;
@@ -89,7 +96,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             }
         }
     }
-    
+
     // Create switch cutout with proper lip
     module switch_cutout() {
         lip_thickness = 1.2;
@@ -112,7 +119,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             cube([cutout_w, cutout_h, chassis_depth_main]);
         }
     }
-    
+
     // Create all rack holes
     module all_rack_holes() {
         // Rack standard: 3 holes per U, with specific positioning
@@ -131,10 +138,10 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         // Second hole: 22.225mm from top of U (middle)
         // Third hole: 38.1mm from top of U (6.35mm from bottom)
         u_hole_positions = [6.35, 22.225, 38.1]; // positions within each U
-        
+
         // Calculate how many full and partial U units we need to consider
         max_u = ceil(rack_height); // Include partial U units
-        
+
         for (side_x = [hole_left_x, hole_right_x]) {
             for (u = [0:max_u-1]) {
                 for (hole_pos = u_hole_positions) {
@@ -173,7 +180,60 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             }
         }
     }
-    
+
+    // Keystone jack cutouts on the front panel
+    module keystone_cutouts() {
+        kw = keystone_width + 2*tolerance;
+        kh = keystone_height + 2*tolerance;
+        pitch_h = kw + keystone_spacing;
+        pitch_v = kh + keystone_spacing;
+        total_w = keystone_count * kw + (keystone_count - 1) * keystone_spacing;
+        total_h = keystone_count * kh + (keystone_count - 1) * keystone_spacing;
+
+        // Vertical centering for horizontal (side) layouts
+        row_y = (height - kh) / 2;
+
+        // Gutter widths on the front panel
+        left_free  = (rack_width - cutout_w) / 2;
+        right_free = (rack_width - cutout_w) / 2;
+        top_free    = (height - cutout_h) / 2;
+        bottom_free = (height - cutout_h) / 2;
+
+        cut_depth = case_thickness + 2*tolerance;
+
+        if (keystone_side == 0) {
+            // Left of switch, row centered in the left gutter
+            gutter_center = left_free / 2;
+            start_x = gutter_center - total_w / 2;
+            for (i = [0:keystone_count-1])
+                translate([start_x + i*pitch_h, row_y, -tolerance])
+                    cube([kw, kh, cut_depth]);
+        } else if (keystone_side == 1) {
+            // Right of switch, row centered in the right gutter
+            gutter_center = rack_width - right_free / 2;
+            start_x = gutter_center - total_w / 2;
+            for (i = [0:keystone_count-1])
+                translate([start_x + i*pitch_h, row_y, -tolerance])
+                    cube([kw, kh, cut_depth]);
+        } else if (keystone_side == 2) {
+            // Above switch, row centered horizontally
+            top_gutter_center = height - top_free / 2;
+            start_y = top_gutter_center - kh / 2;
+            start_x = (rack_width - total_w) / 2;
+            for (i = [0:keystone_count-1])
+                translate([start_x + i*pitch_h, start_y, -tolerance])
+                    cube([kw, kh, cut_depth]);
+        } else {
+            // Below switch, row centered horizontally
+            bot_gutter_center = bottom_free / 2;
+            start_y = bot_gutter_center - kh / 2;
+            start_x = (rack_width - total_w) / 2;
+            for (i = [0:keystone_count-1])
+                translate([start_x + i*pitch_h, start_y, -tolerance])
+                    cube([kw, kh, cut_depth]);
+        }
+    }
+
     // Create zip tie holes and indents
     module zip_tie_features() {
         // Zip tie holes
@@ -183,7 +243,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 cube([zip_tie_hole_width, height, zip_tie_hole_length]);
             }
         }
-        
+
         // Zip tie indents (top and bottom)
         x_pos = (rack_width - switch_width)/2;
         chassis_height = switch_height + (2 * case_thickness);
@@ -203,27 +263,27 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         spacing_x = 15;  // Horizontal spacing (X and Y directions)
         spacing_z = 17;  // Vertical spacing (Z direction) - tighter to match visual density
         margin = 3; // Keep holes away from edges
-        
+
         // BACK FACE HOLES (Y-axis through back)
         // Calculate available space for holes within switch dimensions
         available_width = switch_width - (2 * margin);
         available_depth = switch_depth - (2 * margin);
-        
+
         // Calculate number of holes that fit
         x_cols = floor(available_width / spacing_x);
         z_rows = floor(available_depth / spacing_z);
-        
+
         // Calculate actual grid size for centering
         actual_grid_width = (x_cols - 1) * spacing_x;
         actual_grid_depth = (z_rows - 1) * spacing_z;
-        
+
         // Center the grid within the switch cutout area
         cutout_center_x = rack_width / 2;
         cutout_center_z = front_thickness + switch_depth / 2;
-        
+
         x_start = cutout_center_x - actual_grid_width / 2;
         z_start = cutout_center_z - actual_grid_depth / 2;
-        
+
         // Create back face holes with VERTICAL staggered pattern
         if (x_cols > 0 && z_rows > 0) {
             for (i = [0:x_cols-1]) {
@@ -232,9 +292,9 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                     z_offset = (i % 2 == 1) ? spacing_z/2 : 0;
                     x_pos = x_start + i * spacing_x;
                     z_pos = z_start + j * spacing_z + z_offset;
-                    
+
                     // Only place hole if it fits within bounds after staggering
-                    if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin && 
+                    if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin &&
                         z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
                         translate([x_pos, height, z_pos]) {
                             rotate([90, 0, 0]) {
@@ -245,44 +305,44 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 }
             }
         }
-        
+
         // SIDE FACE HOLES (X-axis through left and right sides)
         // Calculate chassis dimensions
         chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
         side_margin = (rack_width - chassis_width) / 2;
-        
+
         // Calculate available space within switch height
         available_height = switch_height - (2 * margin);
         available_side_depth = switch_depth - (2 * margin);
-        
+
         // Calculate number of holes that fit on sides
         y_cols = floor(available_height / spacing_x);  // Use spacing_x for Y direction
         z_rows_side = floor(available_side_depth / spacing_z);
-        
+
         // Calculate actual grid size for sides
         actual_grid_height = (y_cols - 1) * spacing_x;
         actual_grid_depth_side = (z_rows_side - 1) * spacing_z;
-        
+
         // Center the grid within the switch cutout area (Y and Z)
         cutout_center_y = height / 2;  // Center of the 1U height
-        
+
         y_start = cutout_center_y - actual_grid_height / 2;
         z_start_side = cutout_center_z - actual_grid_depth_side / 2;
-        
+
         // Create holes on both left and right sides with VERTICAL staggered pattern
         if (y_cols > 0 && z_rows_side > 0) {
             for (side = [0, 1]) { // 0 = left side, 1 = right side
                 side_x = side == 0 ? side_margin : rack_width - side_margin;
-                
+
                 for (i = [0:y_cols-1]) {
                     for (j = [0:z_rows_side-1]) {
                         // Stagger every other COLUMN (i) instead of row (j) for vertical honeycomb pattern
                         z_offset = (i % 2 == 1) ? spacing_z/2 : 0;
                         y_pos = y_start + i * spacing_x;
                         z_pos = z_start_side + j * spacing_z + z_offset;
-                        
+
                         // Only place hole if it fits within bounds after staggering
-                        if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin && 
+                        if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin &&
                             z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
                             translate([side_x, y_pos, z_pos]) {
                                 rotate([0, 90, 0]) {
@@ -311,6 +371,9 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 }
                 if (air_holes) {
                     air_holes();
+                }
+                if (keystone_jacks) {
+                    keystone_cutouts();
                 }
             }
         }
