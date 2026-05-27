@@ -1,20 +1,38 @@
 rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 rack_height = 1.0; // [0.5:0.5:5]
-half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
 
+
+// ========================================
+/* [Part Dimensions] */
 switch_width = 135.0;
-switch_depth = 135.0;
+switch_depth = 122.0;
 switch_height = 28.30;
 
-case_thickness = 6; // Thickness of case walls
-wire_diameter = 7; // Diameter of power wire holes
-
+// ========================================
+/* [Holes] */
+// Adds small cutout a USB or Power cable could be routed through to the front
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
+// Diameter of wire to route through front_wire_holes.
+wire_diameter = 7; // Diameter of power wire holes
+// Adds hexagon air cutouts to reduce material and improve cooling.
 air_holes = true; // [true:Show air holes, false:Hide air holes]
-front_lip = true; // [true:Show front lip, false:Hide front lip]
+
+// ========================================
+/* [Advanced] */
+// Used when rack_height is a fraction, cuts a half oval for screws, otherwise will cover up the hole
+half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
+// Thickness of the shell that wraps around the part.
+case_thickness = 6; // Thickness of case walls
+// Make the front plate solid (no hole), useful to hide a part not needing to be accessed from the exterior.
+front_plate_hole = true; // [true:Show front plate hole, false:Solid front plate]
+// Render the same direction will be printed
 print_orientation = true; // [true: Place on printbed, false: Facing forward]
+// Prevent part from sliding out the front by adding a small 0.6mm lip around the front plate hole.
+front_lip = true; // [true:Show front lip, false:Hide front lip]
+// Default gap between part and print walls
 tolerance = 0.42;
 
+// ========================================
 /* [Hidden] */
 height = 44.45 * rack_height;
 
@@ -35,7 +53,10 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     zip_tie_indent_depth = 2;
     zip_tie_cutout_depth = 7;
 
-    chassis_depth_main = switch_depth + zip_tie_cutout_depth;
+    // When the front is solid the switch slides in from the back, so everything
+    // shifts rearward by front_thickness to keep zip ties at the switch's back face.
+    solid_z_offset = front_plate_hole ? 0 : front_thickness;
+    chassis_depth_main = switch_depth + zip_tie_cutout_depth + solid_z_offset;
     chassis_depth_indented = chassis_depth_main - zip_tie_indent_depth;
 
     hole_total_width = zip_tie_hole_count * zip_tie_hole_width;
@@ -93,7 +114,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     // Create switch cutout with optional lip
     module switch_cutout() {
-        if (front_lip) {
+        if (front_plate_hole && front_lip) {
             lip_thickness = 1.2;
             lip_depth = 0.60;
             // Main cutout minus lip (centered)
@@ -113,13 +134,15 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 cube([cutout_w, cutout_h, chassis_depth_main]);
             }
         } else {
-            // Full cutout with no lip
+            // Full cutout: starts at front face when front_plate_hole, or behind front panel when solid
+            z_start = front_plate_hole ? -tolerance : front_thickness;
+            z_depth = front_plate_hole ? chassis_depth_main + 2*tolerance : chassis_depth_main - front_thickness + tolerance;
             translate([
                 (rack_width - cutout_w) / 2,
                 (height - cutout_h) / 2,
-                -tolerance
+                z_start
             ]) {
-                cube([cutout_w, cutout_h, chassis_depth_main + 2*tolerance]);
+                cube([cutout_w, cutout_h, z_depth]);
             }
         }
     }
@@ -188,22 +211,23 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Create zip tie holes and indents
     module zip_tie_features() {
         // Zip tie holes
+        zip_z = switch_depth + solid_z_offset;
         for (i = [0:zip_tie_hole_count-1]) {
             x_pos = (rack_width - switch_width)/2 + (switch_width/(zip_tie_hole_count+1)) * (i+1);
-            translate([x_pos, 0, switch_depth]) {
+            translate([x_pos, 0, zip_z]) {
                 cube([zip_tie_hole_width, height, zip_tie_hole_length]);
             }
         }
-        
+
         // Zip tie indents (top and bottom)
         x_pos = (rack_width - switch_width)/2;
         chassis_height = switch_height + (2 * case_thickness);
         // Bottom indent
-        translate([x_pos, (height - chassis_height)/2, switch_depth]) {
+        translate([x_pos, (height - chassis_height)/2, zip_z]) {
             cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
         }
         // Top indent
-        translate([x_pos, (height + chassis_height)/2 - zip_tie_indent_depth, switch_depth]) {
+        translate([x_pos, (height + chassis_height)/2 - zip_tie_indent_depth, zip_z]) {
             cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
         }
     }
