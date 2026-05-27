@@ -11,6 +11,7 @@ wire_diameter = 7; // Diameter of power wire holes
 
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 air_holes = true; // [true:Show air holes, false:Hide air holes]
+front_lip = true; // [true:Show front lip, false:Hide front lip]
 print_orientation = true; // [true: Place on printbed, false: Facing forward]
 tolerance = 0.42;
 
@@ -90,26 +91,36 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
     }
     
-    // Create switch cutout with proper lip
+    // Create switch cutout with optional lip
     module switch_cutout() {
-        lip_thickness = 1.2;
-        lip_depth = 0.60;
-        // Main cutout minus lip (centered)
-        translate([
-            (rack_width - (cutout_w - 2*lip_thickness)) / 2,
-            (height - (cutout_h - 2*lip_thickness)) / 2,
-            -tolerance
-        ]) {
-            cube([cutout_w - 2*lip_thickness, cutout_h - 2*lip_thickness, chassis_depth_main]);
-        }
-
-        // Switch cutout above the lip (centered)
-        translate([
-            (rack_width - cutout_w) / 2,
-            (height - cutout_h) / 2,
-            lip_depth
-        ]) {
-            cube([cutout_w, cutout_h, chassis_depth_main]);
+        if (front_lip) {
+            lip_thickness = 1.2;
+            lip_depth = 0.60;
+            // Main cutout minus lip (centered)
+            translate([
+                (rack_width - (cutout_w - 2*lip_thickness)) / 2,
+                (height - (cutout_h - 2*lip_thickness)) / 2,
+                -tolerance
+            ]) {
+                cube([cutout_w - 2*lip_thickness, cutout_h - 2*lip_thickness, chassis_depth_main]);
+            }
+            // Switch cutout above the lip (centered)
+            translate([
+                (rack_width - cutout_w) / 2,
+                (height - cutout_h) / 2,
+                lip_depth
+            ]) {
+                cube([cutout_w, cutout_h, chassis_depth_main]);
+            }
+        } else {
+            // Full cutout with no lip
+            translate([
+                (rack_width - cutout_w) / 2,
+                (height - cutout_h) / 2,
+                -tolerance
+            ]) {
+                cube([cutout_w, cutout_h, chassis_depth_main + 2*tolerance]);
+            }
         }
     }
     
