@@ -1,4 +1,7 @@
 CHANGELOG.md
+## v1.7.1
+- Fix regression that hid vars
+
 ## v1.7.0
 - Makes front lip configurable
 - General improvments in parameter grouping
