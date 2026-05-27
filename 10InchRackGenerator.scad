@@ -1,28 +1,22 @@
-/* [Rack] */
 rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 rack_height = 1.0; // [0.5:0.5:5]
 half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
-print_orientation = true; // [true: Place on printbed, false: Facing forward]
 
-/* [Device] */
 switch_width = 135.0;
 switch_depth = 135.0;
 switch_height = 28.30;
+
 case_thickness = 6; // Thickness of case walls
-
-/* [Features] */
-front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 wire_diameter = 7; // Diameter of power wire holes
-air_holes = true; // [true:Show air holes, false:Hide air holes]
 
-/* [Front Lip] */
+front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
+air_holes = true; // [true:Show air holes, false:Hide air holes]
 front_lip = true; // [true:Show front lip, false:Hide front lip]
-lip_thickness = 1.2; // Border width on each side (mm)
-lip_depth = 0.60; // How deep the lip extends before opening up (mm)
+print_orientation = true; // [true: Place on printbed, false: Facing forward]
+tolerance = 0.42;
 
 /* [Hidden] */
 height = 44.45 * rack_height;
-tolerance = 0.42;
 
 
 // The main module containing all internal variables
@@ -100,6 +94,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Create switch cutout with optional lip
     module switch_cutout() {
         if (front_lip) {
+            lip_thickness = 1.2;
+            lip_depth = 0.60;
             // Main cutout minus lip (centered)
             translate([
                 (rack_width - (cutout_w - 2*lip_thickness)) / 2,
