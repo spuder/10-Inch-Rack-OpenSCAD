@@ -1,4 +1,9 @@
 CHANGELOG.md
+## v1.8.0
+- Add `front_plate_hole` parameter to optionally keep the front panel solid
+- Add `front_plate_thickness` parameter to control front panel depth
+- Improved tabbed grouping of variables in UI
+
 ## v1.7.1
 - Fix regression that hid vars
 
