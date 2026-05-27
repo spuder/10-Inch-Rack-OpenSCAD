@@ -1,4 +1,7 @@
 CHANGELOG.md
+## v1.7.0
+- Makes front lip configurable
+- General improvments in parameter grouping
 
 ## v1.6.0
 - Adds variable for wire_diameter
