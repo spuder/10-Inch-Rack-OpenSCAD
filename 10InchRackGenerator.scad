@@ -23,6 +23,8 @@ air_holes = true; // [true:Show air holes, false:Hide air holes]
 half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
 // Thickness of the shell that wraps around the part.
 case_thickness = 6; // Thickness of case walls
+// Thickness of the front panel (the flat face plate).
+front_plate_thickness = 3.0;
 // Make the front plate solid (no hole), useful to hide a part not needing to be accessed from the exterior.
 front_plate_hole = true; // [true:Show front plate hole, false:Solid front plate]
 // Render the same direction will be printed
@@ -42,7 +44,6 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     //6 inch racks (mounts=152.4mm; rails=15.875mm; usable space=120.65mm)
     //10 inch racks (mounts=254.0mm; rails=15.875mm; usable space=221.5mm)
     chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
-    front_thickness = 3.0;
     corner_radius = 4.0;
     chassis_edge_radius = 2.0;
     tolerance = 0.42;
@@ -54,8 +55,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     zip_tie_cutout_depth = 7;
 
     // When the front is solid the switch slides in from the back, so everything
-    // shifts rearward by front_thickness to keep zip ties at the switch's back face.
-    solid_z_offset = front_plate_hole ? 0 : front_thickness;
+    // shifts rearward by front_plate_thickness to keep zip ties at the switch's back face.
+    solid_z_offset = front_plate_hole ? 0 : front_plate_thickness;
     chassis_depth_main = switch_depth + zip_tie_cutout_depth + solid_z_offset;
     chassis_depth_indented = chassis_depth_main - zip_tie_indent_depth;
 
@@ -102,12 +103,12 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         chassis_height = switch_height + (2 * case_thickness);
         union() {
             // Front panel
-            linear_extrude(height = front_thickness) {
+            linear_extrude(height = front_plate_thickness) {
                 rounded_rect_2d(rack_width, height, corner_radius);
             }
             // Chassis body
-            translate([side_margin, (height - chassis_height) / 2, front_thickness]) {
-                rounded_chassis_profile(chassis_width, chassis_height, chassis_edge_radius, chassis_depth_main - front_thickness);
+            translate([side_margin, (height - chassis_height) / 2, front_plate_thickness]) {
+                rounded_chassis_profile(chassis_width, chassis_height, chassis_edge_radius, chassis_depth_main - front_plate_thickness);
             }
         }
     }
@@ -135,8 +136,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             }
         } else {
             // Full cutout: starts at front face when front_plate_hole, or behind front panel when solid
-            z_start = front_plate_hole ? -tolerance : front_thickness;
-            z_depth = front_plate_hole ? chassis_depth_main + 2*tolerance : chassis_depth_main - front_thickness + tolerance;
+            z_start = front_plate_hole ? -tolerance : front_plate_thickness;
+            z_depth = front_plate_hole ? chassis_depth_main + 2*tolerance : chassis_depth_main - front_plate_thickness + tolerance;
             translate([
                 (rack_width - cutout_w) / 2,
                 (height - cutout_h) / 2,
@@ -254,7 +255,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         
         // Center the grid within the switch cutout area
         cutout_center_x = rack_width / 2;
-        cutout_center_z = front_thickness + switch_depth / 2;
+        cutout_center_z = front_plate_thickness + switch_depth / 2;
         
         x_start = cutout_center_x - actual_grid_width / 2;
         z_start = cutout_center_z - actual_grid_depth / 2;
