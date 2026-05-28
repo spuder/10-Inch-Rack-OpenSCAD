@@ -240,28 +240,38 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         spacing_x = 15;  // Horizontal spacing (X and Y directions)
         spacing_z = 17;  // Vertical spacing (Z direction) - tighter to match visual density
         margin = 3; // Keep holes away from edges
-        
-        // BACK FACE HOLES (Y-axis through back)
+
+        // Chassis dimensions used by both hole sections
+        chassis_height = switch_height + (2 * case_thickness);
+        chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
+        side_margin = (rack_width - chassis_width) / 2;
+
+        // TOP/BOTTOM FACE HOLES (Y-axis, penetrating top and bottom chassis walls)
         // Calculate available space for holes within switch dimensions
         available_width = switch_width - (2 * margin);
         available_depth = switch_depth - (2 * margin);
-        
+
         // Calculate number of holes that fit
         x_cols = floor(available_width / spacing_x);
         z_rows = floor(available_depth / spacing_z);
-        
+
         // Calculate actual grid size for centering
         actual_grid_width = (x_cols - 1) * spacing_x;
         actual_grid_depth = (z_rows - 1) * spacing_z;
-        
+
         // Center the grid within the switch cutout area
         cutout_center_x = rack_width / 2;
         cutout_center_z = front_plate_thickness + switch_depth / 2;
-        
+
         x_start = cutout_center_x - actual_grid_width / 2;
         z_start = cutout_center_z - actual_grid_depth / 2;
-        
-        // Create back face holes with VERTICAL staggered pattern
+
+        // Cylinder must span the full chassis height in Y, including when chassis_height > height
+        // (chassis body is centered in height, so it can protrude above/below the front panel bounds)
+        y_hole_top = (height + chassis_height) / 2 + 1;
+        y_hole_h = chassis_height + 2;
+
+        // Create top/bottom face holes with VERTICAL staggered pattern
         if (x_cols > 0 && z_rows > 0) {
             for (i = [0:x_cols-1]) {
                 for (j = [0:z_rows-1]) {
@@ -269,25 +279,21 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                     z_offset = (i % 2 == 1) ? spacing_z/2 : 0;
                     x_pos = x_start + i * spacing_x;
                     z_pos = z_start + j * spacing_z + z_offset;
-                    
+
                     // Only place hole if it fits within bounds after staggering
-                    if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin && 
+                    if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin &&
                         z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
-                        translate([x_pos, height, z_pos]) {
+                        translate([x_pos, y_hole_top, z_pos]) {
                             rotate([90, 0, 0]) {
-                                cylinder(h = height, d = hole_d, $fn = 6);
+                                cylinder(h = y_hole_h, d = hole_d, $fn = 6);
                             }
                         }
                     }
                 }
             }
         }
-        
-        // SIDE FACE HOLES (X-axis through left and right sides)
-        // Calculate chassis dimensions
-        chassis_height = switch_height + (2 * case_thickness);
-        chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
-        side_margin = (rack_width - chassis_width) / 2;
+
+        // SIDE FACE HOLES (X-axis through left and right walls)
 
         // Calculate available space within chassis height (includes case walls above/below switch)
         available_height = chassis_height - (2 * margin);
@@ -307,28 +313,26 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         y_start = cutout_center_y - actual_grid_height / 2;
         z_start_side = cutout_center_z - actual_grid_depth_side / 2;
 
-        // Create holes on both left and right sides with VERTICAL staggered pattern
+        // Each cylinder runs from 1mm outside the left wall all the way through to 1mm outside
+        // the right wall. Using a single cylinder per position avoids the right-side cylinder
+        // going in the wrong direction (away from the chassis).
         if (y_cols > 0 && z_rows_side > 0) {
-            for (side = [0, 1]) { // 0 = left side, 1 = right side
-                side_x = side == 0 ? side_margin : rack_width - side_margin;
+            for (i = [0:y_cols-1]) {
+                for (j = [0:z_rows_side-1]) {
+                    // Stagger every other COLUMN (i) instead of row (j) for vertical honeycomb pattern
+                    z_offset = (i % 2 == 1) ? spacing_z/2 : 0;
+                    y_pos = y_start + i * spacing_x;
+                    z_pos = z_start_side + j * spacing_z + z_offset;
 
-                for (i = [0:y_cols-1]) {
-                    for (j = [0:z_rows_side-1]) {
-                        // Stagger every other COLUMN (i) instead of row (j) for vertical honeycomb pattern
-                        z_offset = (i % 2 == 1) ? spacing_z/2 : 0;
-                        y_pos = y_start + i * spacing_x;
-                        z_pos = z_start_side + j * spacing_z + z_offset;
-
-                        // Only place hole if it fits within bounds after staggering
-                        if (y_pos + hole_d/2 <= cutout_center_y + chassis_height/2 - margin &&
-                            y_pos - hole_d/2 >= cutout_center_y - chassis_height/2 + margin &&
-                            z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin &&
-                            z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
-                            translate([side_x, y_pos, z_pos]) {
-                                rotate([0, 90, 0]) {
-                                    rotate([0, 0, 90]) {  // Rotate hexagon 90 degrees to match front/back orientation
-                                        cylinder(h = chassis_width, d = hole_d, $fn = 6);
-                                    }
+                    // Only place hole if it fits within bounds after staggering
+                    if (y_pos + hole_d/2 <= cutout_center_y + chassis_height/2 - margin &&
+                        y_pos - hole_d/2 >= cutout_center_y - chassis_height/2 + margin &&
+                        z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin &&
+                        z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
+                        translate([side_margin - 1, y_pos, z_pos]) {
+                            rotate([0, 90, 0]) {
+                                rotate([0, 0, 90]) {  // Rotate hexagon 90 degrees to match front/back orientation
+                                    cylinder(h = chassis_width + 2, d = hole_d, $fn = 6);
                                 }
                             }
                         }
