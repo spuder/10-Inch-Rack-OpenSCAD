@@ -1,4 +1,5 @@
 rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
+// Height of the rack in U units, can be a fraction for partial U (e.g. 1.5 for 1U plus half of the next U)
 rack_height = 1.0; // [0.5:0.5:5]
 
 
@@ -284,41 +285,44 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         
         // SIDE FACE HOLES (X-axis through left and right sides)
         // Calculate chassis dimensions
+        chassis_height = switch_height + (2 * case_thickness);
         chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
         side_margin = (rack_width - chassis_width) / 2;
-        
-        // Calculate available space within switch height
-        available_height = switch_height - (2 * margin);
+
+        // Calculate available space within chassis height (includes case walls above/below switch)
+        available_height = chassis_height - (2 * margin);
         available_side_depth = switch_depth - (2 * margin);
-        
+
         // Calculate number of holes that fit on sides
         y_cols = floor(available_height / spacing_x);  // Use spacing_x for Y direction
         z_rows_side = floor(available_side_depth / spacing_z);
-        
+
         // Calculate actual grid size for sides
         actual_grid_height = (y_cols - 1) * spacing_x;
         actual_grid_depth_side = (z_rows_side - 1) * spacing_z;
-        
-        // Center the grid within the switch cutout area (Y and Z)
-        cutout_center_y = height / 2;  // Center of the 1U height
-        
+
+        // Center the grid within the chassis height (Y) and switch depth (Z)
+        cutout_center_y = height / 2;  // Chassis is centered in the 1U height
+
         y_start = cutout_center_y - actual_grid_height / 2;
         z_start_side = cutout_center_z - actual_grid_depth_side / 2;
-        
+
         // Create holes on both left and right sides with VERTICAL staggered pattern
         if (y_cols > 0 && z_rows_side > 0) {
             for (side = [0, 1]) { // 0 = left side, 1 = right side
                 side_x = side == 0 ? side_margin : rack_width - side_margin;
-                
+
                 for (i = [0:y_cols-1]) {
                     for (j = [0:z_rows_side-1]) {
                         // Stagger every other COLUMN (i) instead of row (j) for vertical honeycomb pattern
                         z_offset = (i % 2 == 1) ? spacing_z/2 : 0;
                         y_pos = y_start + i * spacing_x;
                         z_pos = z_start_side + j * spacing_z + z_offset;
-                        
+
                         // Only place hole if it fits within bounds after staggering
-                        if (z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin && 
+                        if (y_pos + hole_d/2 <= cutout_center_y + chassis_height/2 - margin &&
+                            y_pos - hole_d/2 >= cutout_center_y - chassis_height/2 + margin &&
+                            z_pos + hole_d/2 <= cutout_center_z + switch_depth/2 - margin &&
                             z_pos - hole_d/2 >= cutout_center_z - switch_depth/2 + margin) {
                             translate([side_x, y_pos, z_pos]) {
                                 rotate([0, 90, 0]) {
