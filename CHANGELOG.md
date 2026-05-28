@@ -1,4 +1,9 @@
 CHANGELOG.md
+
+## v1.9.0
+- Adds testing
+- Fix missing holes when `switch_height` is within 6mm of `rack_height` [github #9](https://github.com/spuder/10-Inch-Rack-OpenSCAD/issues/9)
+
 ## v1.8.0
 - Add `front_plate_hole` parameter to optionally keep the front panel solid
 - Add `front_plate_thickness` parameter to control front panel depth
