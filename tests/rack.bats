@@ -14,6 +14,7 @@ setup_file() {
         front_wire_holes wire_diameter air_holes
         half_height_holes case_thickness front_plate_thickness
         front_plate_hole print_orientation front_lip tolerance
+        keystones
     )
     for p in "${params[@]}"; do
         param_defined "$p" || { echo "Missing parameter: $p"; return 1; }
@@ -65,6 +66,16 @@ setup_file() {
 @test "thick case walls" {
     render_views "thick_walls" -D 'case_thickness=10'
     assert_views_exist "thick_walls"
+}
+
+@test "keystone jacks" {
+    render_views "keystones" -D 'keystones=true'
+    assert_views_exist "keystones"
+}
+
+@test "keystone jacks disabled" {
+    render_views "no_keystones" -D 'keystones=false'
+    assert_views_exist "no_keystones"
 }
 
 # ── Networking devices ────────────────────────────────────────────────────────

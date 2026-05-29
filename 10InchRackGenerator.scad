@@ -3,12 +3,14 @@ rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 rack_height = 1.0; // [0.5:0.5:5]
 
 
-component_width = 135.0;
+component_width = 100.0;
 component_depth = 122.0;
 component_height = 28.30;
 
 // ========================================
 /* [Holes] */
+// Add keystone jacks to the front panel
+keystones = true; // [true: Place keystone jacks, false: Remove keystone jacks]
 // Adds small cutout a USB or Power cable could be routed through to the front
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 // Diameter of wire to route through front_wire_holes.
@@ -32,8 +34,6 @@ print_orientation = true; // [true: Place on printbed, false: Facing forward]
 front_lip = true; // [true:Show front lip, false:Hide front lip]
 // Default gap between part and print walls
 tolerance = 0.42;
-// Add keystone jacks to the front panel
-keystones = true; // [true: Place keystone jacks, false: Remove keystone jacks]
 
 // ========================================
 /* [Hidden] */
@@ -44,9 +44,7 @@ height = 44.45 * rack_height;
 module switch_mount(switch_width, switch_height, switch_depth) {
     //6 inch racks (mounts=152.4mm; rails=15.875mm; usable space=120.65mm)
     //10 inch racks (mounts=254.0mm; rails=15.875mm; usable space=221.5mm)
-    // If keystones is true, add 30mm to switch_width to accommodate the jack panel
-    effective_switch_width = keystones ? switch_width + 30 : switch_width;
-    chassis_width = min(effective_switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
+    chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
     corner_radius = 4.0;
     chassis_edge_radius = 2.0;
     tolerance = 0.42;
@@ -69,11 +67,19 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     $fn = 64;
 
     // Calculated dimensions
-    cutout_w = effective_switch_width + (2 * tolerance);
+    cutout_w = switch_width + (2 * tolerance);
     cutout_h = switch_height + (2 * tolerance);
     cutout_x = (rack_width - cutout_w) / 2;
     cutout_y = (height - cutout_h) / 2;
-    
+
+    // Keystone placement — 1.5mm internal tolerance, not user-adjustable
+    keystone_tolerance = 1.5;
+    keystone_outer_width = 23;    // jack_width(15) + 2*wall_thickness(4)
+    keystone_outer_length = 30.5; // jack_length(16.5) + small_clip(2) + big_clip(4) + 2*wall(8)
+    // Outer (left) edge pinned to 210/2 - keystone_tolerance from centerline
+    keystone_tx = rack_width/2 - (105 - keystone_tolerance) + keystone_outer_width;
+    keystone_ty = (height - keystone_outer_length) / 2;
+
     // Helper modules
     module capsule_slot_2d(L, H) {
         hull() {
@@ -160,7 +166,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         hole_right_x = (rack_width + hole_spacing_x) / 2;
 
         // 10 inch rack = 10x7mm oval
-        // 6 inchr rack = 3.25 x 6.5mm oval
+        // 6 inch rack = 3.25 x 6.5mm oval
         slot_len = (rack_width == 152.4) ? 6.5 : 10.0;
         slot_height = (rack_width == 152.4) ? 3.25 : 7.0;
 
@@ -358,14 +364,13 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         big_clip_depth = catch_overhang + 2;
         outer_length = jack_length + small_clip_depth + big_clip_depth + (wall_thickness * 2);
         outer_width = jack_width + (wall_thickness * 2);
-        outer_height_lower = switch_height/2-6; //TODO: make more dynamic
 
-        difference() { // This is the new, main difference() block
+        difference() {
             union() {
                 difference() {
                     difference() {
                         difference() {
-                            cube([outer_length + outer_height_lower, outer_width, wall_height]);
+                            cube([outer_length, outer_width, wall_height]);
                             translate([wall_thickness, wall_thickness, big_clip_clearance]) {
                                 cube([outer_length, jack_width, wall_height]);
                             }
@@ -416,24 +421,19 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                     }
             }
             
-            // Removed the color() and rotate() from the original code since it was for debug.
-            // It's still a good idea to comment out this section if you want to see the triangle itself.
-            /*
-            color("red")
-                translate([outer_length-5, outer_width/2, 0]) {
-                    rotate([0,0,90])
-                        linear_extrude(height = 2) {
-                            polygon([
-                                [0, 2],
-                                [-2, -2],
-                                [2, -2]
-                            ]);
-                        }
-                }
-            */
         }
     }
 
+
+    // Punch the full keystone footprint through the front face plate
+    module keystone_front_cutout() {
+        // After rotate([0,0,90]) the keystone outer box maps to:
+        //   X: [keystone_tx - keystone_outer_width, keystone_tx]
+        //   Y: [keystone_ty, keystone_ty + keystone_outer_length]
+        translate([keystone_tx - keystone_outer_width, keystone_ty, -tolerance]) {
+            cube([keystone_outer_width, keystone_outer_length, front_plate_thickness + 2 * tolerance]);
+        }
+    }
 
     // Main assembly - cleaner boolean structure
     translate([-rack_width/2, -height/2, 0]) {
@@ -449,20 +449,16 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 if (air_holes) {
                     air_holes();
                 }
-
+                if (keystones) {
+                    keystone_front_cutout();
+                    translate([rack_width, 0, 0]) mirror([1, 0, 0]) keystone_front_cutout();
+                }
             }
         }
         if (keystones) {
-            // Move keystone to the left edge of the switch and rotate 90 degrees on Z axis
-            translate([
-                (rack_width - effective_switch_width + 47) / 2, // left edge of switch
-                (height - 28) / 2, // vertically centered for jack_width=15
-                0
-            ]) {
-                rotate([0,0,90]) {
-                    keystone();
-                }
-            }
+            translate([keystone_tx, keystone_ty, 0]) rotate([0,0,90]) keystone();
+            translate([rack_width, 0, 0]) mirror([1, 0, 0])
+                translate([keystone_tx, keystone_ty, 0]) rotate([0,0,90]) keystone();
         }
     }
 }
