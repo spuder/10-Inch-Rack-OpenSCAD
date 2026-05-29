@@ -3,14 +3,14 @@ rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 rack_height = 1.0; // [0.5:0.5:5]
 
 
-component_width = 112.0;
+component_width = 110.0;
 component_depth = 122.0;
 component_height = 28.30;
 
 // ========================================
 /* [Keystones] */
 // Add keystone jacks to the front panel
-keystones = true; // [true: Place keystone jacks, false: Remove keystone jacks]
+keystones = false; // [true: Place keystone jacks, false: Remove keystone jacks]
 
 // ========================================
 /* [Holes] */
@@ -32,7 +32,7 @@ front_plate_thickness = 3.0;
 // Make the front plate solid (no hole), useful to hide a part not needing to be accessed from the exterior.
 front_plate_hole = true; // [true:Show front plate hole, false:Solid front plate]
 // Render the same direction will be printed
-print_orientation = false; // [true: Place on printbed, false: Facing forward]
+print_orientation = true; // [true: Place on printbed, false: Facing forward]
 // Prevent part from sliding out the front by adding a small 0.6mm lip around the front plate hole.
 front_lip = true; // [true:Show front lip, false:Hide front lip]
 // Default gap between part and print walls
