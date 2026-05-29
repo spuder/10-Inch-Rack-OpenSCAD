@@ -3,11 +3,9 @@ rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 rack_height = 1.0; // [0.5:0.5:5]
 
 
-// ========================================
-/* [Part Dimensions] */
-switch_width = 135.0;
-switch_depth = 122.0;
-switch_height = 28.30;
+component_width = 135.0;
+component_depth = 122.0;
+component_height = 28.30;
 
 // ========================================
 /* [Holes] */
@@ -101,7 +99,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Create the main body as a separate module
     module main_body() {
         side_margin = (rack_width - chassis_width) / 2;
-        chassis_height = switch_height + (2 * case_thickness);
+        chassis_height = min(switch_height + (2 * case_thickness), height);
         union() {
             // Front panel
             linear_extrude(height = front_plate_thickness) {
@@ -223,7 +221,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
 
         // Zip tie indents (top and bottom)
         x_pos = (rack_width - switch_width)/2;
-        chassis_height = switch_height + (2 * case_thickness);
+        chassis_height = min(switch_height + (2 * case_thickness), height);
         // Bottom indent
         translate([x_pos, (height - chassis_height)/2, zip_z]) {
             cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
@@ -242,7 +240,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         margin = 3; // Keep holes away from edges
 
         // Chassis dimensions used by both hole sections
-        chassis_height = switch_height + (2 * case_thickness);
+        chassis_height = min(switch_height + (2 * case_thickness), height);
         chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
         side_margin = (rack_width - chassis_width) / 2;
 
@@ -363,9 +361,9 @@ module switch_mount(switch_width, switch_height, switch_depth) {
 
 // Call the module
 if (print_orientation) {
-    switch_mount(switch_width, switch_height, switch_depth);
+    switch_mount(component_width, component_height, component_depth);
 } else {
     rotate([-90,0,0])
-        translate([0, -height/2, -switch_depth/2])
-            switch_mount(switch_width, switch_height, switch_depth);
+        translate([0, -height/2, -component_depth/2])
+            switch_mount(component_width, component_height, component_depth);
 }

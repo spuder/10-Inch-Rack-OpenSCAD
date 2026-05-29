@@ -27,14 +27,14 @@ setup_file() {
     [ -s "$RENDERS/half_u.stl" ]
 }
 
-@test "small switch_height (air hole edge case) produces valid STL" {
-    render_stl "small_switch" -D 'switch_height=18' -D 'rack_height=0.5'
-    [ -s "$RENDERS/small_switch.stl" ]
+@test "small component_height (air hole edge case) produces valid STL" {
+    render_stl "small_component" -D 'component_height=18' -D 'rack_height=0.5'
+    [ -s "$RENDERS/small_component.stl" ]
 }
 
-@test "large switch filling rack unit produces valid STL" {
-    render_stl "large_switch" -D 'switch_height=40'
-    [ -s "$RENDERS/large_switch.stl" ]
+@test "large component filling rack unit produces valid STL" {
+    render_stl "large_component" -D 'component_height=40'
+    [ -s "$RENDERS/large_component.stl" ]
 }
 
 @test "solid front plate produces valid STL" {
@@ -62,7 +62,14 @@ setup_file() {
 @test "missing_air_holes" {
     render_stl "missing_air_holes" \
         -D 'rack_height=1' \
-        -D 'switch_width=182' -D 'switch_depth=178' -D 'switch_height=36' \
+        -D 'component_width=182' -D 'component_depth=178' -D 'component_height=36' \
         -D 'air_holes=true'
     [ -s "$RENDERS/missing_air_holes.stl" ]
+}
+
+@test "chassis height overflow clamped (component_height=36 case_thickness=12)" {
+    render_stl "chassis_overflow_clamp" \
+        -D 'component_width=182' -D 'component_depth=178' -D 'component_height=36' \
+        -D 'case_thickness=12'
+    [ -s "$RENDERS/chassis_overflow_clamp.stl" ]
 }

@@ -1,8 +1,12 @@
 CHANGELOG.md
 
+## v1.10.0
+- Rename `switch_width/depth/height` parameters to `component_width/depth/height`
+- Fix chassis overflowing rack panel when `component_height + 2*case_thickness` exceeds the rack unit height
+
 ## v1.9.0
 - Adds testing
-- Fix missing holes when `switch_height` is within 6mm of `rack_height` [github #9](https://github.com/spuder/10-Inch-Rack-OpenSCAD/issues/9)
+- Fix missing holes when `component_height` is within 6mm of `rack_height` [github #9](https://github.com/spuder/10-Inch-Rack-OpenSCAD/issues/9)
 
 ## v1.8.0
 - Add `front_plate_hole` parameter to optionally keep the front panel solid
