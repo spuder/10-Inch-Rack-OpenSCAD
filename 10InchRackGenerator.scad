@@ -8,9 +8,12 @@ component_depth = 122.0;
 component_height = 28.30;
 
 // ========================================
-/* [Holes] */
+/* [Keystones] */
 // Add keystone jacks to the front panel
-keystones = true; // [true: Place keystone jacks, false: Remove keystone jacks]
+keystones = false; // [true: Place keystone jacks, false: Remove keystone jacks]
+
+// ========================================
+/* [Holes] */
 // Adds small cutout a USB or Power cable could be routed through to the front
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
 // Diameter of wire to route through front_wire_holes.
