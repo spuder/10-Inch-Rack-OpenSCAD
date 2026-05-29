@@ -358,11 +358,11 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         jack_width=15,
         wall_height=10,
         wall_thickness=4,
-        catch_overhang=2,
+        catch_overhang=2.4,
+        small_clip_depth=2,
         big_clip_clearance=4,
         small_clip_clearance=6.5
     ) {
-        small_clip_depth = catch_overhang;
         big_clip_depth = catch_overhang + 2;
         outer_length = jack_length + small_clip_depth + big_clip_depth + (wall_thickness * 2);
         outer_width = jack_width + (wall_thickness * 2);
@@ -396,8 +396,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                     cube([wall_thickness, outer_width, wall_height]);
                     cube([wall_thickness + small_clip_depth, outer_width, small_clip_clearance]);
                     
-                    // LEFT CATCH MECHANISM (Fixed Y-translation and height)
-                    translate([2, wall_thickness + jack_width, 8]) {
+                    // LEFT CATCH MECHANISM
+                    translate([wall_thickness - catch_overhang, wall_thickness + jack_width, 8]) {
                         rotate([90, 0, 0])
                             linear_extrude(height = jack_width)
                                 polygon([
@@ -408,12 +408,12 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                                 ]);
                     }
                     
-                    translate([26.5,0,0]) {
+                    translate([outer_length - 4, 0, 0]) {
                         cube([4, 23, 10]);
                     }
                     
-                    // RIGHT CATCH MECHANISM (Fixed Y-translation and height)
-                    translate([28.5, wall_thickness, 8]) {
+                    // RIGHT CATCH MECHANISM
+                    translate([outer_length - 2, wall_thickness, 8]) {
                         rotate([0, 0, -180]) {
                             rotate([90, 0, 0])
                                 linear_extrude(height = jack_width)
