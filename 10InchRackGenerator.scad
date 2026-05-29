@@ -364,6 +364,16 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         big_clip_depth = catch_overhang + 2;
         outer_length = jack_length + small_clip_depth + big_clip_depth + (wall_thickness * 2);
         outer_width = jack_width + (wall_thickness * 2);
+        chamfer_depth = 2;
+
+        intersection() {
+            // Chamfered outer envelope: full size up to chamfer_depth from the back,
+            // then tapers inward so all four back edges get a 45° chamfer.
+            hull() {
+                cube([outer_length, outer_width, wall_height - chamfer_depth]);
+                translate([chamfer_depth, chamfer_depth, wall_height - chamfer_depth])
+                    cube([outer_length - 2*chamfer_depth, outer_width - 2*chamfer_depth, chamfer_depth]);
+            }
 
         difference() {
             union() {
@@ -420,8 +430,9 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                         ]);
                     }
             }
-            
+
         }
+        } // end intersection
     }
 
 
