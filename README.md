@@ -32,6 +32,9 @@ make test-stl
 
 # Run a single test by name
 make test TEST=missing_air_holes
+
+# Run a single test with stl
+RENDER_STL=1 make test TEST=missing_air_holes
 ```
 
 Output files land in `tests/renders/`. Each test case produces up to five PNG previews:

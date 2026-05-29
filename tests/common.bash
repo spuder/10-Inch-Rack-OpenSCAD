@@ -44,6 +44,7 @@ _validate_params() {
 # Validates all -D parameter names before rendering.
 render_views() {
     local stem="$1"; shift
+    set -- -D 'print_orientation=false' "$@"
     _validate_params "$@" || return 1
 
     local cameras=("$CAMERA_CORNER" "$CAMERA_FRONT" "$CAMERA_SIDE" "$CAMERA_TOP" "$CAMERA_BOTTOM")
