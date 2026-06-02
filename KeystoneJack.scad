@@ -1,29 +1,30 @@
 print_orientation=true;
+cross_section_preview=true;
 module keystone(
 ){
     e=0.01; // epsilon for coplanar face fixes, fixes bug where some faces leave a thin sliver of material
-    wall=4;
+    wall=2.5;
     front_hole_width=14.9;
-    front_hole_height=16;
-    front_hole_z_offset=4.48;
+    front_hole_height=16.3;
+    front_hole_z_offset=4.35;
     front_hole_lip=0;
 
     jack_width=front_hole_width+wall;
-    jack_height=28.29;
+    jack_height=25;
     jack_depth=9.5;
     front_large_catch_depth=2.8;
     front_chamfer_angle=50; // degrees from horizontal (depth axis)
 
-    back_hole_height=24.3;
-    back_hole_z_offset=2;
+    back_hole_height=24.4;
+    back_hole_z_offset=1.9;
 
-    back_small_catch_length=2.0;
-    back_small_catch_depth=1.5;
+    back_small_catch_length=1.9;
+    back_small_catch_depth=1.4;
 
-    back_large_catch_length=2.5;
+    back_large_catch_length=2.4;
     back_large_catch_depth=1.4;
     
-    back_chamfer=1.5;
+    back_chamfer=1.2;
 
     //cut the hole out of the cube
     union(){
@@ -67,9 +68,9 @@ module keystone(
                 rotate([90, 0, 0])
                     linear_extrude(height = 0.4+e)
                         polygon([
-                            [0, 2],
-                            [-2, -2],
-                            [2, -2]
+                            [0, -2],
+                            [-2, 2],
+                            [2, 2]
                         ]);
 
         // Chamfer back bottom edge (along X)
@@ -125,10 +126,15 @@ module keystone(
 
 
 if ($preview) {
-    intersection() {
+    if (cross_section_preview) {
+        intersection() {
+            keystone();
+            cube([10, 35, 50]);
+        }
+    } else {
         keystone();
-        cube([10, 35, 50]);
     }
+
 } else {
     if (print_orientation) {
         rotate([90, 0, 0])
