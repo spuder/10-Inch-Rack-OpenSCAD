@@ -3,8 +3,8 @@ module keystone(
 ){
     e=0.01; // epsilon for coplanar face fixes, fixes bug where some faces leave a thin sliver of material
     wall=4;
-    front_hole_width=14.6;
-    front_hole_height=19.4;
+    front_hole_width=14.8;
+    front_hole_height=17.0;
     front_hole_z_offset=9.2;
     front_hole_lip=1;
     jack_width=front_hole_width+wall;
@@ -12,8 +12,8 @@ module keystone(
     jack_depth=9.7;
     lip_depth=2;
     catch_depth=5;
-    back_hole_height=25.5;
-    back_hole_z_offset=5.5;
+    back_hole_height=24.5;
+    back_hole_z_offset=6.5;
     back_small_catch_length=2;
     back_small_catch_depth=2;
     back_large_catch_length=2.5;
