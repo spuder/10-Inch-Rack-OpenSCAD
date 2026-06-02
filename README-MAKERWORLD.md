@@ -29,7 +29,6 @@ Set `switch_width`, `switch_depth`, and `switch_height` to the width, depth, and
 - **front_plate_thickness** (3.0) — Thickness of the front face plate (mm)
 - **front_plate_hole** (true) — When false, front plate is solid — useful for devices that don't need front access
 - **front_lip** (true) — Adds a small lip around the front opening to prevent the device from sliding out
-- **print_orientation** (true) — Orient flat on the print bed (true) or facing forward (false)
 - **tolerance** (0.42) — Gap added to each side between device and shell walls (mm)
 
 #### Known Dimensions

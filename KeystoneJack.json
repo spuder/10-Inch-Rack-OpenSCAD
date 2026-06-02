@@ -1,0 +1,8 @@
+{
+    "parameterSets": {
+        "design default values": {
+            "cross_section_preview": "true"
+        }
+    },
+    "fileFormatVersion": "1"
+}

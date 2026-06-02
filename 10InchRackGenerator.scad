@@ -31,8 +31,6 @@ case_thickness = 6; // Thickness of case walls
 front_plate_thickness = 3.0;
 // Make the front plate solid (no hole), useful to hide a part not needing to be accessed from the exterior.
 front_plate_hole = true; // [true:Show front plate hole, false:Solid front plate]
-// Render the same direction will be printed
-print_orientation = true; // [true: Place on printbed, false: Facing forward]
 // Prevent part from sliding out the front by adding a small 0.6mm lip around the front plate hole.
 front_lip = true; // [true:Show front lip, false:Hide front lip]
 // Default gap between part and print walls
@@ -75,12 +73,12 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     cutout_x = (rack_width - cutout_w) / 2;
     cutout_y = (height - cutout_h) / 2;
 
-    // Keystone placement
-    keystone_outer_width = 23;    // jack_width(15) + 2*wall_thickness(4)
-    keystone_outer_length = 30.5; // jack_length(16.5) + small_clip(2) + big_clip(4) + 2*wall(8)
-    // Outer (left) edge pinned to 210/2 from centerline → 210mm outer-to-outer for the mirrored pair
-    keystone_tx = rack_width/2 - 105 + keystone_outer_width;
-    keystone_ty = (height - keystone_outer_length) / 2;
+    // Keystone placement — jack X span (width) goes horizontal, jack Z span (height) goes vertical
+    keystone_outer_width  = 19.9; // jack_width + wall = (front_hole_width + wall) + wall
+    keystone_outer_height = 27.5; // jack_height + wall
+    // Left edge of left keystone pinned to 210/2 from centreline → 210mm outer-to-outer for the mirrored pair
+    keystone_tx = rack_width/2 - 105;
+    keystone_ty = (height - keystone_outer_height) / 2;
 
     // Helper modules
     module capsule_slot_2d(L, H) {
@@ -353,122 +351,100 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     }
 
     // Complete keystone with embossed triangle
-    module keystone(
-        jack_length=16.5,
-        jack_width=15,
-        wall_height=10,
-        wall_thickness=4,
-        catch_overhang=2.4,
-        small_clip_depth=2,
-        big_clip_clearance=4,
-        small_clip_clearance=6.5
-    ) {
-        big_clip_depth = catch_overhang + 2;
-        outer_length = jack_length + small_clip_depth + big_clip_depth + (wall_thickness * 2);
-        outer_width = jack_width + (wall_thickness * 2);
-        chamfer_lead = 2;
-        chamfer_depth = 2;
+    module keystone(){
+        e=0.01; // epsilon for coplanar face fixes, fixes bug where some faces leave a thin sliver of material
+        wall=2.5;
+        front_hole_width=14.9;
+        front_hole_height=16.3;
+        front_hole_z_offset=4.28;
+        front_hole_lip=0;
 
-        intersection() {
-            // Chamfered outer envelope: full size up to chamfer_depth from the top,
-            // then tapers inward so all four top edges get a 45° chamfer.
-            hull() {
-                cube([outer_length, outer_width, wall_height - chamfer_depth]);
-                translate([chamfer_depth, chamfer_depth, wall_height - chamfer_depth])
-                    cube([outer_length - 2*chamfer_depth, outer_width - 2*chamfer_depth, chamfer_depth]);
-            }
+        jack_width=front_hole_width+wall;
+        jack_height=25;
+        jack_depth=9.7;
+        front_large_catch_depth=3;
+        front_chamfer_angle=50; // degrees from horizontal (depth axis)
 
-            difference() { // This is the new, main difference() block
-                union() {
-                    difference() {
-                        difference() {
-                            difference() {
-                                cube([outer_length, outer_width, wall_height]);
-                                translate([wall_thickness, wall_thickness, big_clip_clearance]) {
-                                    cube([outer_length, jack_width, wall_height]);
-                                }
-                            }
-                            translate([wall_thickness + small_clip_depth, wall_thickness, 0]) {
-                                cube([jack_length, jack_width, wall_height + 1]);
-                            }
-                        }
-                    }
-                    cube([wall_thickness, outer_width, wall_height]);
-                    cube([wall_thickness + small_clip_depth, outer_width, small_clip_clearance]);
-                    
-                    // LEFT CATCH MECHANISM
-                    translate([wall_thickness - catch_overhang, wall_thickness + jack_width, 8]) {
-                        rotate([90, 0, 0])
-                            linear_extrude(height = jack_width)
-                                polygon([
-                                    [0,0],
-                                    [catch_overhang,0],
-                                    [wall_thickness,catch_overhang],
-                                    [0,catch_overhang]
-                                ]);
-                    }
-                    
-                    translate([outer_length - 4, 0, 0]) {
-                        cube([4, 23, 10]);
-                    }
-                    
-                    // RIGHT CATCH MECHANISM
-                    translate([outer_length - 2, wall_thickness, 8]) {
-                        rotate([0, 0, -180]) {
-                            rotate([90, 0, 0])
-                                linear_extrude(height = jack_width)
+        back_hole_height=24.4;
+        back_hole_z_offset=1.9;
+
+        back_small_catch_length=2;
+        back_small_catch_depth=1.4;
+
+        back_large_catch_length=2.6;
+        back_large_catch_depth=1.3;
+        
+        back_chamfer=1.2;
+
+        // Flip entire part because I accidentially desinged it upside down
+        translate([0, 0, jack_height + wall])
+        mirror([0, 0, 1]) {
+            union(){
+                // Back edge chamfer via intersection with hull (4 separate cuts → 1 operation)
+                intersection() {
+                    difference(){
+                        cube([jack_width+wall,jack_depth,jack_height+wall]);
+                        // Front hole
+                        translate([(jack_width+wall-front_hole_width)/2,0,front_hole_z_offset])
+                            cube([front_hole_width,jack_depth+wall,front_hole_height]);
+                        // Back hole
+                        translate([(jack_width+wall-front_hole_width)/2,front_large_catch_depth,back_hole_z_offset])
+                            cube([front_hole_width,jack_depth+wall-front_large_catch_depth,back_hole_height]);
+                        // Chamfer on front face of small catch
+                        translate([wall + front_hole_width, 0, 0])
+                            rotate([0, -90, 0])
+                                linear_extrude(front_hole_width)
                                     polygon([
-                                        [0,0],
-                                        [catch_overhang,0],
-                                        [wall_thickness,catch_overhang],
-                                        [0,catch_overhang]
+                                        [front_hole_z_offset + front_hole_height - e, front_hole_lip - e],
+                                        [front_hole_z_offset + front_hole_height + (front_large_catch_depth - front_hole_lip) * tan(front_chamfer_angle), front_large_catch_depth],
+                                        [front_hole_z_offset + front_hole_height - e, front_large_catch_depth]
                                     ]);
-                        }
+                        // Front directional triangle emboss (cut into face)
+                        translate([(jack_width+wall)/2, 0.4, (front_hole_z_offset + front_hole_height + jack_height + wall) / 2])
+                            rotate([90, 0, 0])
+                                linear_extrude(height = 0.4+e)
+                                    polygon([[0, -2], [-2, 2], [2, 2]]);
+                    } // end difference
+                    // Chamfer all 4 back edges in one hull operation
+                    hull() {
+                        cube([jack_width+wall, jack_depth-back_chamfer, jack_height+wall]);
+                        translate([back_chamfer, 0, back_chamfer])
+                            cube([jack_width+wall-2*back_chamfer, jack_depth, jack_height+wall-2*back_chamfer]);
                     }
-                }
-                
-                // Embossed triangle on outer face
-                translate([outer_length-5, outer_width/2, 0]) {
-                    rotate([0,0,90])
-                        linear_extrude(height = 0.4) {
-                            polygon([
-                                [0, 2],
-                                [-2, -2],
-                                [2, -2]
-                            ]);
-                        }
-                }
+                } // end intersection
 
-                // Lower: bottom edge (X=6,Z=big_clip_clearance), slope (4,4.5)→(6,6.5)
-                hull() {
-                    // Top of the cut: bites into the solid wall to the right (+X direction)
-                    translate([wall_thickness + small_clip_depth + jack_length - 0.1, wall_thickness, big_clip_clearance - 0.1])
-                        cube([chamfer_lead + 0.1, jack_width, 0.2]);
-                    
-                    // Bottom of the cut: tapers back to the flat inner vertical face
-                    translate([wall_thickness + small_clip_depth + jack_length - 0.1, wall_thickness, big_clip_clearance - chamfer_lead - 0.1])
-                        cube([0.2, jack_width, chamfer_lead + 0.1]);
-                }
-                
-                // Upper: top edge (X=6,Z=small_clip_clearance), slope (4,6.5)→(6,4.5)
-                hull() {
-                    translate([wall_thickness + small_clip_depth - chamfer_lead, wall_thickness, small_clip_clearance - 0.1])
-                        cube([chamfer_lead, jack_width, 0.2]);
-                    translate([wall_thickness + small_clip_depth, wall_thickness, small_clip_clearance - chamfer_lead - 0.1])
-                        cube([0.2, jack_width, chamfer_lead + 0.1]);
-                }
-            }
-        } // end intersection
-    }
+                // Small back catch
+                translate([wall + front_hole_width, 0, 0])
+                    rotate([0, -90, 0])
+                        linear_extrude(front_hole_width)
+                            polygon([
+                                [back_hole_z_offset + back_hole_height - back_small_catch_length, jack_depth - back_small_catch_depth],
+                                [back_hole_z_offset + back_hole_height,                           jack_depth - back_small_catch_depth],
+                                [back_hole_z_offset + back_hole_height,                           jack_depth],
+                                [back_hole_z_offset + back_hole_height - back_small_catch_length, jack_depth]
+                            ]);
+
+                // Large back catch
+                translate([wall + front_hole_width, 0, 0])
+                    rotate([0, -90, 0])
+                        linear_extrude(front_hole_width)
+                            polygon([
+                                [back_hole_z_offset,                           jack_depth - back_large_catch_depth],
+                                [back_hole_z_offset + back_large_catch_length, jack_depth - back_large_catch_depth],
+                                [back_hole_z_offset + back_large_catch_length, jack_depth],
+                                [back_hole_z_offset,                           jack_depth]
+                            ]);
+
+            } // end union
+        } // end mirror
+    } // end module keystone
+
 
 
     // Punch the full keystone footprint through the front face plate
     module keystone_front_cutout() {
-        // After rotate([0,0,90]) the keystone outer box maps to:
-        //   X: [keystone_tx - keystone_outer_width, keystone_tx]
-        //   Y: [keystone_ty, keystone_ty + keystone_outer_length]
-        translate([keystone_tx - keystone_outer_width, keystone_ty, -tolerance]) {
-            cube([keystone_outer_width, keystone_outer_length, front_plate_thickness + 2 * tolerance]);
+        translate([keystone_tx, keystone_ty, -tolerance]) {
+            cube([keystone_outer_width, keystone_outer_height, front_plate_thickness + 2 * tolerance]);
         }
     }
 
@@ -493,18 +469,19 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             }
         }
         if (keystones) {
-            translate([keystone_tx, keystone_ty, 0]) rotate([0,0,90]) keystone();
+            // rotate([90,0,0]) maps keystone Y→rack Z (depth), keystone Z→rack -Y (compensated by +keystone_outer_height in translate)
+            translate([keystone_tx, keystone_ty + keystone_outer_height, 0]) rotate([90,0,0]) keystone();
             translate([rack_width, 0, 0]) mirror([1, 0, 0])
-                translate([keystone_tx, keystone_ty, 0]) rotate([0,0,90]) keystone();
+                translate([keystone_tx, keystone_ty + keystone_outer_height, 0]) rotate([90,0,0]) keystone();
         }
     }
 }
 
 // Call the module
-if (print_orientation) {
-    switch_mount(component_width, component_height, component_depth);
-} else {
+if ($preview) {
     rotate([-90,0,0])
         translate([0, -height/2, -component_depth/2])
             switch_mount(component_width, component_height, component_depth);
+} else {
+    switch_mount(component_width, component_height, component_depth);
 }

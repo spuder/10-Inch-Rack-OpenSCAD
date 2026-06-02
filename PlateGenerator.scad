@@ -1,7 +1,6 @@
 rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 rack_height = 1.0; // [0.5:0.5:5]
 half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
-print_orientation = true; // [true: Place on printbed, false: Facing forward]
 ribs = true; // [true:Show structural ribs, false:Hide structural ribs]
 
 /* [Hidden] */
@@ -162,11 +161,12 @@ module plate_generator() {
     }
 }
 
-// Call the module with print orientation
-if (print_orientation) {
-    plate_generator();
-} else {
+
+if ($preview) {
     rotate([-90,0,0])
         translate([0, -height/2, -front_thickness/2])
             plate_generator();
+} else {
+    // Full render with details
+    plate_generator();
 }

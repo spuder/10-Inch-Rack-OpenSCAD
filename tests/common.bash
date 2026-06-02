@@ -2,6 +2,7 @@
 # Shared helpers loaded by all .bats files via: load common
 
 SCAD="$BATS_TEST_DIRNAME/../10InchRackGenerator.scad"
+PRESETS="$BATS_TEST_DIRNAME/../10InchRackGenerator.json"
 RENDERS="$BATS_TEST_DIRNAME/renders"
 OPENSCAD="${OPENSCAD:-openscad}"
 IMGSIZE="${IMGSIZE:-2560,1440}"
@@ -44,7 +45,6 @@ _validate_params() {
 # Validates all -D parameter names before rendering.
 render_views() {
     local stem="$1"; shift
-    set -- -D 'print_orientation=false' "$@"
     _validate_params "$@" || return 1
 
     local cameras=("$CAMERA_CORNER" "$CAMERA_FRONT" "$CAMERA_SIDE" "$CAMERA_TOP" "$CAMERA_BOTTOM")
@@ -71,6 +71,44 @@ render_stl() {
     local stem="$1"; shift
     _validate_params "$@" || return 1
     "$OPENSCAD" -o "$RENDERS/${stem}.stl" "$@" "$SCAD" 2>/dev/null
+}
+
+# preset_names
+# Lists every Customizer preset name defined in $PRESETS, one per line.
+preset_names() {
+    jq -r '.parameterSets | keys[]' "$PRESETS"
+}
+
+# preset_stem <name>
+# Filesystem-safe stem for a preset name (lowercased, spaces → underscores).
+preset_stem() {
+    echo "$1" | tr '[:upper:] ' '[:lower:]_'
+}
+
+# render_preset_views <preset-name>
+# Renders the five standard views for a named preset from $PRESETS to
+# tests/renders/<stem>_<view>.png.
+render_preset_views() {
+    local name="$1"
+    local stem; stem="$(preset_stem "$name")"
+
+    local cameras=("$CAMERA_CORNER" "$CAMERA_FRONT" "$CAMERA_SIDE" "$CAMERA_TOP" "$CAMERA_BOTTOM")
+    local views=("corner"          "front"          "side"          "top"          "bottom")
+
+    for i in "${!views[@]}"; do
+        "$OPENSCAD" \
+            -o "$RENDERS/${stem}_${views[$i]}.png" \
+            --imgsize="$IMGSIZE" \
+            --camera="${cameras[$i]}" \
+            --autocenter --viewall \
+            --colorscheme="Tomorrow Night" \
+            -p "$PRESETS" -P "$name" \
+            "$SCAD" 2>/dev/null || return 1
+    done
+
+    if [ "$RENDER_STL" = "1" ]; then
+        "$OPENSCAD" -o "$RENDERS/${stem}.stl" -p "$PRESETS" -P "$name" "$SCAD" 2>/dev/null || return 1
+    fi
 }
 
 # assert_views_exist <stem>

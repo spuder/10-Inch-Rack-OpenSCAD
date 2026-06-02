@@ -7,6 +7,24 @@ OpenSCAD file to generate a 10 inch rack for 3d printing
 ![10 Inch Mini-Rack v4](https://github.com/user-attachments/assets/5946932a-b365-4e06-b929-32ac15681922)
 
 
+## My Presets
+
+My personal model configurations are saved as Customizer presets in
+[`10InchRackGenerator.json`](10InchRackGenerator.json). OpenSCAD auto-loads this
+file (it shares the `.scad` basename), so each saved model appears in the
+Customizer's preset dropdown — pick one, Render (f6), then export the STL.
+
+To build a preset from the command line:
+
+```bash
+openscad -p 10InchRackGenerator.json -P "Xyber Hydra" -o out.stl 10InchRackGenerator.scad
+```
+
+Every saved preset is also covered by the test suite (see the
+`customizer presets render` case below), so presets added via the Customizer get
+rendered automatically with no test edits.
+
+
 ## Testing
 
 ### Manual Testing
@@ -21,7 +39,8 @@ OpenSCAD file to generate a 10 inch rack for 3d printing
 
 ### Automated Tests
 
-Requires [bats-core](https://github.com/bats-core/bats-core) and `openscad` on your `PATH`.
+Requires [bats-core](https://github.com/bats-core/bats-core), `openscad`, and
+`jq` (used to read presets) on your `PATH`.
 
 ```bash
 # Fast preview tests — renders PNG images, ~1s per case
@@ -35,7 +54,14 @@ make test TEST=missing_air_holes
 
 # Run a single test with stl
 RENDER_STL=1 make test TEST=missing_air_holes
+
+# Render every model saved in 10InchRackGenerator.json
+make test TEST="customizer presets render"
 ```
+
+The `customizer presets render` case reads
+[`10InchRackGenerator.json`](10InchRackGenerator.json) at runtime, so any model
+you save from the GUI Customizer is tested automatically — no test edits needed.
 
 Output files land in `tests/renders/`. Each test case produces up to five PNG previews:
 

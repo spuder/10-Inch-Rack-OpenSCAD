@@ -1,4 +1,3 @@
-print_orientation=true;
 cross_section_preview=true;
 module keystone(
 ){
@@ -128,21 +127,14 @@ module keystone(
 }
 
 
-if ($preview) {
-    if (cross_section_preview) {
-        intersection() {
-            keystone();
-            cube([10, 35, 50]);
-        }
-    } else {
+if ($preview && cross_section_preview) {
+    intersection() {
         keystone();
+        cube([10, 35, 50]);
     }
-
+} else if ($preview) {
+    keystone();
 } else {
-    if (print_orientation) {
-        rotate([90, 0, 0])
-            keystone();
-    } else {
+    rotate([90, 0, 0])
         keystone();
-    }
 }

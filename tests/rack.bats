@@ -13,7 +13,7 @@ setup_file() {
         component_width component_depth component_height
         front_wire_holes wire_diameter air_holes
         half_height_holes case_thickness front_plate_thickness
-        front_plate_hole print_orientation front_lip tolerance
+        front_plate_hole front_lip tolerance
         keystones
     )
     for p in "${params[@]}"; do
@@ -226,6 +226,19 @@ setup_file() {
         -D 'component_width=166' -D 'component_depth=71' -D 'component_height=224' \
         -D 'rack_height=5'
     assert_views_exist "synology_ds124"
+}
+
+# ── My presets ────────────────────────────────────────────────────────────────
+# Renders every model saved in 10InchRackGenerator.json. Presets added via the
+# GUI Customizer are picked up here automatically — no test edits needed.
+
+@test "customizer presets render" {
+    local names; names="$(preset_names)"
+    [ -n "$names" ] || { echo "No presets found in $PRESETS"; return 1; }
+    while IFS= read -r name; do
+        render_preset_views "$name" || { echo "Failed to render preset: $name"; return 1; }
+        assert_views_exist "$(preset_stem "$name")"
+    done <<< "$names"
 }
 
 # ── Regression tests ──────────────────────────────────────────────────────────
