@@ -46,9 +46,9 @@ module keystone(
             rotate([0, -90, 0])
                 linear_extrude(front_hole_width)
                     polygon([
-                        [front_hole_z_offset + front_hole_height,                                                       front_hole_lip],  // A: front face, top of front hole
+                        [front_hole_z_offset + front_hole_height - e, front_hole_lip - e],          // A: shifted e below catch floor to avoid coplanar artifact
                         [front_hole_z_offset + front_hole_height + (front_large_catch_depth - front_hole_lip) * tan(front_chamfer_angle), front_large_catch_depth],  // B: angle-derived point
-                        [front_hole_z_offset + front_hole_height,                                                       front_large_catch_depth]      // C: right-angle corner
+                        [front_hole_z_offset + front_hole_height - e, front_large_catch_depth]      // C: inner corner, same e shift as A
                     ]);
 
         // Cut out chamefer on front face of large catch
