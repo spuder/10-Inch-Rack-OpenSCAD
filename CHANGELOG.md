@@ -1,5 +1,13 @@
 CHANGELOG.md
 
+## v1.11.0
+- Add optional keystone jack mounts (`keystones` parameter) — two mounts placed symmetrically at the maximum 210mm usable width limit, one per rack ear
+- Overhauled KeystoneJack.scad to make easier to modify. Will be released as own makerworld file
+- Add .json files to store presets
+- Overhaul tests
+- Remove `print_orientation` and replaced with builtin $preview variable
+
+
 ## v1.10.0
 - Rename `switch_width/depth/height` parameters to `component_width/depth/height`
 - Fix chassis overflowing rack panel when `component_height + 2*case_thickness` exceeds the rack unit height
