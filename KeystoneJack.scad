@@ -6,7 +6,7 @@ module keystone(
     wall=2.5;
     front_hole_width=14.9;
     front_hole_height=16.3;
-    front_hole_z_offset=4.35;
+    front_hole_z_offset=4.28;
     front_hole_lip=0;
 
     jack_width=front_hole_width+wall;
@@ -22,7 +22,7 @@ module keystone(
     back_small_catch_depth=1.4;
 
     back_large_catch_length=2.5;
-    back_large_catch_depth=1.4;
+    back_large_catch_depth=1.3;
     
     back_chamfer=1.2;
 
