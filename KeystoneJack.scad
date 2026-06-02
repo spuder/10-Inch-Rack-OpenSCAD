@@ -12,16 +12,16 @@ module keystone(
     jack_width=front_hole_width+wall;
     jack_height=25;
     jack_depth=9.5;
-    front_large_catch_depth=2.8;
+    front_large_catch_depth=3;
     front_chamfer_angle=50; // degrees from horizontal (depth axis)
 
     back_hole_height=24.4;
     back_hole_z_offset=1.9;
 
-    back_small_catch_length=1.9;
+    back_small_catch_length=2;
     back_small_catch_depth=1.4;
 
-    back_large_catch_length=2.4;
+    back_large_catch_length=2.5;
     back_large_catch_depth=1.4;
     
     back_chamfer=1.2;
