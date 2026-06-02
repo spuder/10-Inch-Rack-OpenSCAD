@@ -1,12 +1,20 @@
+// Rack Width 10 inch or 6 inch
 rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
+// Height (measured in U)
 rack_height = 1.0; // [0.5:0.5:5]
+// Thickness of the front plate
+front_thickness = 3.0;
+// Radius for rounded corners on the front plate
+corner_radius = 4.0;
 half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
+//Adds additional strength
 ribs = true; // [true:Show structural ribs, false:Hide structural ribs]
+//Optional keystone jacks
+keystones = 0; // [0:1:10]
 
 /* [Hidden] */
 height = 44.45 * rack_height;
-front_thickness = 3.0;
-corner_radius = 4.0;
+
 tolerance = 0.42;
 
 // Structural rib parameters
@@ -14,6 +22,89 @@ rib_thickness = 2.0;
 rib_depth = 3.0;
 rib_spacing = 15.0; // Distance between ribs
 chamfer_size = 0.5; // Size of chamfer on rib edges
+
+module keystone() {
+    e=0.01;
+    wall=2.5;
+    front_hole_width=14.9;
+    front_hole_height=16.3;
+    front_hole_z_offset=4.28;
+    front_hole_lip=0;
+
+    jack_width=front_hole_width+wall;
+    jack_height=25;
+    jack_depth=9.7;
+    front_large_catch_depth=3;
+    front_chamfer_angle=50;
+
+    back_hole_height=24.4;
+    back_hole_z_offset=1.9;
+
+    back_small_catch_length=2;
+    back_small_catch_depth=1.4;
+
+    back_large_catch_length=2.6;
+    back_large_catch_depth=1.3;
+
+    back_chamfer=1.2;
+
+    translate([0, 0, jack_height + wall])
+    mirror([0, 0, 1]) {
+        union(){
+            difference(){
+                cube([jack_width+wall,jack_depth,jack_height+wall]);
+                translate([(jack_width+wall-front_hole_width)/2,0,front_hole_z_offset])
+                    cube([front_hole_width,jack_depth+wall,front_hole_height]);
+                translate([(jack_width+wall-front_hole_width)/2,front_large_catch_depth,back_hole_z_offset])
+                    cube([front_hole_width,jack_depth+wall-front_large_catch_depth,back_hole_height]);
+                translate([wall + front_hole_width, 0, 0])
+                    rotate([0, -90, 0])
+                        linear_extrude(front_hole_width)
+                            polygon([
+                                [front_hole_z_offset + front_hole_height - e, front_hole_lip - e],
+                                [front_hole_z_offset + front_hole_height + (front_large_catch_depth - front_hole_lip) * tan(front_chamfer_angle), front_large_catch_depth],
+                                [front_hole_z_offset + front_hole_height - e, front_large_catch_depth]
+                            ]);
+                translate([jack_width+wall+e, 0, -e])
+                    rotate([0, -90, 0])
+                        linear_extrude(jack_width+wall+2*e)
+                            polygon([[-e, jack_depth+e], [back_chamfer, jack_depth+e], [-e, jack_depth-back_chamfer]]);
+                translate([jack_width+wall+e, 0, -e])
+                    rotate([0, -90, 0])
+                        linear_extrude(jack_width+wall+2*e)
+                            polygon([[jack_height+wall+2*e, jack_depth+e], [jack_height+wall+2*e-back_chamfer, jack_depth+e], [jack_height+wall+2*e, jack_depth-back_chamfer]]);
+                translate([0, 0, -e])
+                    linear_extrude(jack_height+wall+2*e)
+                        polygon([[-e, jack_depth+e], [back_chamfer, jack_depth+e], [-e, jack_depth-back_chamfer]]);
+                translate([0, 0, -e])
+                    linear_extrude(jack_height+wall+2*e)
+                        polygon([[jack_width+wall+e, jack_depth+e], [jack_width+wall+e-back_chamfer, jack_depth+e], [jack_width+wall+e, jack_depth-back_chamfer]]);
+                translate([(jack_width+wall)/2, 0.4, (front_hole_z_offset + front_hole_height + jack_height + wall) / 2])
+                    rotate([90, 0, 0])
+                        linear_extrude(height = 0.4+e)
+                            polygon([[0, -2], [-2, 2], [2, 2]]);
+            }
+            translate([wall + front_hole_width, 0, 0])
+                rotate([0, -90, 0])
+                    linear_extrude(front_hole_width)
+                        polygon([
+                            [back_hole_z_offset + back_hole_height - back_small_catch_length, jack_depth - back_small_catch_depth],
+                            [back_hole_z_offset + back_hole_height,                           jack_depth - back_small_catch_depth],
+                            [back_hole_z_offset + back_hole_height,                           jack_depth],
+                            [back_hole_z_offset + back_hole_height - back_small_catch_length, jack_depth]
+                        ]);
+            translate([wall + front_hole_width, 0, 0])
+                rotate([0, -90, 0])
+                    linear_extrude(front_hole_width)
+                        polygon([
+                            [back_hole_z_offset,                           jack_depth - back_large_catch_depth],
+                            [back_hole_z_offset + back_large_catch_length, jack_depth - back_large_catch_depth],
+                            [back_hole_z_offset + back_large_catch_length, jack_depth],
+                            [back_hole_z_offset,                           jack_depth]
+                        ]);
+        }
+    }
+}
 
 // The main module for the plate generator
 module plate_generator() {
@@ -152,15 +243,56 @@ module plate_generator() {
         }
     }
 
+    // Keystone outer dimensions (must match keystone() module internals)
+    // width = jack_width + wall = (14.9 + 2.5) + 2.5 = 19.9
+    // height = jack_height + wall = 25 + 2.5 = 27.5
+    ks_w = 19.9;
+    ks_h = 27.5;
+    ks_d = 9.7;
+
+    // Rectangular cutouts through the plate face where keystone housings sit.
+    // Required so the plate's solid material doesn't fill the keystone's internal holes.
+    module keystone_cutouts() {
+        if (keystones > 0) {
+            for (i = [0:keystones-1]) {
+                translate([
+                    rack_width/2 - keystones*ks_w/2 + i*ks_w,
+                    height/2 - ks_h/2,
+                    -tolerance
+                ])
+                    cube([ks_w, ks_h, ks_d + 2*tolerance]);
+            }
+        }
+    }
+
+    // Keystone housings, front face flush with plate front (Z = 0).
+    // rotate([90,0,0]) maps keystone depth (Y) to plate +Z, keystone height (Z) to plate -Y.
+    module keystone_array() {
+        if (keystones > 0) {
+            for (i = [0:keystones-1]) {
+                translate([
+                    rack_width/2 - keystones*ks_w/2 + i*ks_w,
+                    height/2 + ks_h/2,
+                    0
+                ])
+                    rotate([90, 0, 0])
+                        keystone();
+            }
+        }
+    }
+
     // Main assembly
     translate([-rack_width/2, -height/2, 0]) {
-        difference() {
-            plate_body();
-            all_rack_holes();
+        union() {
+            difference() {
+                plate_body();
+                all_rack_holes();
+                keystone_cutouts();
+            }
+            keystone_array();
         }
     }
 }
-
 
 if ($preview) {
     rotate([-90,0,0])
