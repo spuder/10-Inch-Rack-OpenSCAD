@@ -1,4 +1,6 @@
 CHANGELOG.md
+## v1.11.1
+- Add keystone jacks to PlateGenerator.scad
 
 ## v1.11.0
 - Add optional keystone jack mounts (`keystones` parameter) — two mounts placed symmetrically at the maximum 210mm usable width limit, one per rack ear
