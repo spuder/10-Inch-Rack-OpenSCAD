@@ -26,102 +26,105 @@ module keystone(
     
     back_chamfer=1.2;
 
-    //cut the hole out of the cube
-    union(){
-        difference(){
-            // Make solid cube
-            cube([jack_width+wall,jack_depth,jack_height+wall]);
-        // Cut out the front hole
-        translate([(jack_width+wall-front_hole_width)/2,0,front_hole_z_offset])
-            color("blue")
-            cube([front_hole_width,jack_depth+wall,front_hole_height]);
-        // Cut out the back hole. It should be extruded to front_large_catch_depth
-        translate([(jack_width+wall-front_hole_width)/2,front_large_catch_depth,back_hole_z_offset])
-            color("red")
-            cube([front_hole_width,jack_depth+wall-front_large_catch_depth,back_hole_height]);
+    // Flip entire part because I accidentially desinged it upside down
+    translate([0, 0, jack_height + wall]) 
+    mirror([0, 0, 1]) {
+        union(){
+            difference(){
+                // Make solid cube
+                cube([jack_width+wall,jack_depth,jack_height+wall]);
+            // Cut out the front hole
+            translate([(jack_width+wall-front_hole_width)/2,0,front_hole_z_offset])
+                color("blue")
+                cube([front_hole_width,jack_depth+wall,front_hole_height]);
+            // Cut out the back hole. It should be extruded to front_large_catch_depth
+            translate([(jack_width+wall-front_hole_width)/2,front_large_catch_depth,back_hole_z_offset])
+                color("red")
+                cube([front_hole_width,jack_depth+wall-front_large_catch_depth,back_hole_height]);
 
-        // Cut out chamfer on front face of small catch
-        color("green")
-        translate([wall + front_hole_width, 0, 0])
-            rotate([0, -90, 0])
-                linear_extrude(front_hole_width)
-                    polygon([
-                        [front_hole_z_offset + front_hole_height - e, front_hole_lip - e],          // A: shifted e below catch floor to avoid coplanar artifact
-                        [front_hole_z_offset + front_hole_height + (front_large_catch_depth - front_hole_lip) * tan(front_chamfer_angle), front_large_catch_depth],  // B: angle-derived point
-                        [front_hole_z_offset + front_hole_height - e, front_large_catch_depth]      // C: inner corner, same e shift as A
-                    ]);
-
-        // Cut out chamefer on front face of large catch
-        // color("orange")
-        // translate([wall + front_hole_width, 0, 0])
-        //     rotate([0, -90, 0])
-        //         linear_extrude(front_hole_width)
-        //             polygon([
-        //                 [front_hole_z_offset+e, front_hole_lip],  // A: front face, bottom of front hole
-        //                 [back_hole_z_offset,  front_large_catch_depth],     // B: inner ledge, bottom of back hole
-        //                 [front_hole_z_offset, front_large_catch_depth]      // C: inner ledge, same Z as A
-        //             ]);
-
-        // Front directional triangle emboss (cut into face)
-        color("yellow")
-            translate([(jack_width+wall)/2, 0.4, (front_hole_z_offset + front_hole_height + jack_height + wall) / 2])
-                rotate([90, 0, 0])
-                    linear_extrude(height = 0.4+e)
+            // Cut out chamfer on front face of small catch
+            color("green")
+            translate([wall + front_hole_width, 0, 0])
+                rotate([0, -90, 0])
+                    linear_extrude(front_hole_width)
                         polygon([
-                            [0, -2],
-                            [-2, 2],
-                            [2, 2]
+                            [front_hole_z_offset + front_hole_height - e, front_hole_lip - e],          // A: shifted e below catch floor to avoid coplanar artifact
+                            [front_hole_z_offset + front_hole_height + (front_large_catch_depth - front_hole_lip) * tan(front_chamfer_angle), front_large_catch_depth],  // B: angle-derived point
+                            [front_hole_z_offset + front_hole_height - e, front_large_catch_depth]      // C: inner corner, same e shift as A
                         ]);
 
-        // Chamfer back bottom edge (along X)
-        translate([jack_width+wall+e, 0, -e])
-            rotate([0, -90, 0])
-                linear_extrude(jack_width+wall+2*e)
+            // Cut out chamefer on front face of large catch
+            // color("orange")
+            // translate([wall + front_hole_width, 0, 0])
+            //     rotate([0, -90, 0])
+            //         linear_extrude(front_hole_width)
+            //             polygon([
+            //                 [front_hole_z_offset+e, front_hole_lip],  // A: front face, bottom of front hole
+            //                 [back_hole_z_offset,  front_large_catch_depth],     // B: inner ledge, bottom of back hole
+            //                 [front_hole_z_offset, front_large_catch_depth]      // C: inner ledge, same Z as A
+            //             ]);
+
+            // Front directional triangle emboss (cut into face)
+            color("yellow")
+                translate([(jack_width+wall)/2, 0.4, (front_hole_z_offset + front_hole_height + jack_height + wall) / 2])
+                    rotate([90, 0, 0])
+                        linear_extrude(height = 0.4+e)
+                            polygon([
+                                [0, -2],
+                                [-2, 2],
+                                [2, 2]
+                            ]);
+
+            // Chamfer back bottom edge (along X)
+            translate([jack_width+wall+e, 0, -e])
+                rotate([0, -90, 0])
+                    linear_extrude(jack_width+wall+2*e)
+                        polygon([[-e, jack_depth+e], [back_chamfer, jack_depth+e], [-e, jack_depth-back_chamfer]]);
+
+            // Chamfer back top edge (along X)
+            translate([jack_width+wall+e, 0, -e])
+                rotate([0, -90, 0])
+                    linear_extrude(jack_width+wall+2*e)
+                        polygon([[jack_height+wall+2*e, jack_depth+e], [jack_height+wall+2*e-back_chamfer, jack_depth+e], [jack_height+wall+2*e, jack_depth-back_chamfer]]);
+
+            // Chamfer back left edge (along Z)
+            translate([0, 0, -e])
+                linear_extrude(jack_height+wall+2*e)
                     polygon([[-e, jack_depth+e], [back_chamfer, jack_depth+e], [-e, jack_depth-back_chamfer]]);
 
-        // Chamfer back top edge (along X)
-        translate([jack_width+wall+e, 0, -e])
-            rotate([0, -90, 0])
-                linear_extrude(jack_width+wall+2*e)
-                    polygon([[jack_height+wall+2*e, jack_depth+e], [jack_height+wall+2*e-back_chamfer, jack_depth+e], [jack_height+wall+2*e, jack_depth-back_chamfer]]);
+            // Chamfer back right edge (along Z)
+            translate([0, 0, -e])
+                linear_extrude(jack_height+wall+2*e)
+                    polygon([[jack_width+wall+e, jack_depth+e], [jack_width+wall+e-back_chamfer, jack_depth+e], [jack_width+wall+e, jack_depth-back_chamfer]]);
 
-        // Chamfer back left edge (along Z)
-        translate([0, 0, -e])
-            linear_extrude(jack_height+wall+2*e)
-                polygon([[-e, jack_depth+e], [back_chamfer, jack_depth+e], [-e, jack_depth-back_chamfer]]);
+            } // end difference
 
-        // Chamfer back right edge (along Z)
-        translate([0, 0, -e])
-            linear_extrude(jack_height+wall+2*e)
-                polygon([[jack_width+wall+e, jack_depth+e], [jack_width+wall+e-back_chamfer, jack_depth+e], [jack_width+wall+e, jack_depth-back_chamfer]]);
+            // Small back catch (added geometry)
+            color("purple")
+                translate([wall + front_hole_width, 0, 0])
+                    rotate([0, -90, 0])
+                        linear_extrude(front_hole_width)
+                            polygon([
+                                [back_hole_z_offset + back_hole_height - back_small_catch_length, jack_depth - back_small_catch_depth],  // A
+                                [back_hole_z_offset + back_hole_height,                           jack_depth - back_small_catch_depth],  // B
+                                [back_hole_z_offset + back_hole_height,                           jack_depth],                           // C
+                                [back_hole_z_offset + back_hole_height - back_small_catch_length, jack_depth]                            // D
+                            ]);
 
-        } // end difference
+            // Large back catch (added geometry)
+            color("cyan")
+                translate([wall + front_hole_width, 0, 0])
+                    rotate([0, -90, 0])
+                        linear_extrude(front_hole_width)
+                            polygon([
+                                [back_hole_z_offset,                           jack_depth - back_large_catch_depth],  // A
+                                [back_hole_z_offset + back_large_catch_length, jack_depth - back_large_catch_depth],  // B
+                                [back_hole_z_offset + back_large_catch_length, jack_depth],                           // C
+                                [back_hole_z_offset,                           jack_depth]                            // D
+                            ]);
 
-        // Small back catch (added geometry)
-        color("purple")
-            translate([wall + front_hole_width, 0, 0])
-                rotate([0, -90, 0])
-                    linear_extrude(front_hole_width)
-                        polygon([
-                            [back_hole_z_offset + back_hole_height - back_small_catch_length, jack_depth - back_small_catch_depth],  // A
-                            [back_hole_z_offset + back_hole_height,                           jack_depth - back_small_catch_depth],  // B
-                            [back_hole_z_offset + back_hole_height,                           jack_depth],                           // C
-                            [back_hole_z_offset + back_hole_height - back_small_catch_length, jack_depth]                            // D
-                        ]);
-
-        // Large back catch (added geometry)
-        color("cyan")
-            translate([wall + front_hole_width, 0, 0])
-                rotate([0, -90, 0])
-                    linear_extrude(front_hole_width)
-                        polygon([
-                            [back_hole_z_offset,                           jack_depth - back_large_catch_depth],  // A
-                            [back_hole_z_offset + back_large_catch_length, jack_depth - back_large_catch_depth],  // B
-                            [back_hole_z_offset + back_large_catch_length, jack_depth],                           // C
-                            [back_hole_z_offset,                           jack_depth]                            // D
-                        ]);
-
-    } // end union
+        } // end union
+    }
 }
 
 
