@@ -82,3 +82,9 @@ make test TEST=dell_optiplex_7020
 # → tests/renders/dell_optiplex_7020_{corner,front,side,top,bottom}.png
 # → tests/renders/dell_optiplex_7020.stl
 ```
+
+
+## Keystones
+
+An openscad file to generate keystones is avilable [on makerworld](https://makerworld.com/en/models/2882057-keystone-jack#profileId-3219015)
+A stl is available at ./keystone.stl and ./keystone.3mf
