@@ -102,6 +102,23 @@
             "rack_width": "254",
             "tolerance": "0.42",
             "wire_diameter": "7"
+        },
+        "Sodola Switch": {
+            "air_holes": "true",
+            "case_thickness": "6",
+            "component_depth": "100.3",
+            "component_height": "28.15",
+            "component_width": "190.30",
+            "front_lip": "true",
+            "front_plate_hole": "true",
+            "front_plate_thickness": "3",
+            "front_wire_holes": "false",
+            "half_height_holes": "true",
+            "keystones": "false",
+            "rack_height": "1",
+            "rack_width": "254",
+            "tolerance": "0.42",
+            "wire_diameter": "7"
         }
     }
 }
