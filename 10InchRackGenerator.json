@@ -21,9 +21,9 @@
         "Xyber Hydra": {
             "air_holes": "true",
             "case_thickness": "6",
-            "component_depth": "98.5",
+            "component_depth": "100.4",
             "component_height": "34.5",
-            "component_width": "140",
+            "component_width": "147.4",
             "front_lip": "true",
             "front_plate_hole": "true",
             "front_plate_thickness": "3",
@@ -118,6 +118,23 @@
             "rack_height": "1",
             "rack_width": "254",
             "tolerance": "0.42",
+            "wire_diameter": "7"
+        },
+        "Xyber Hydra keystones": {
+            "air_holes": "true",
+            "case_thickness": "6",
+            "component_depth": "100.4",
+            "component_height": "34.5",
+            "component_width": "147.4",
+            "front_lip": "true",
+            "front_plate_hole": "true",
+            "front_plate_thickness": "3",
+            "front_wire_holes": "false",
+            "half_height_holes": "true",
+            "keystones": "true",
+            "rack_height": "1",
+            "rack_width": "254",
+            "tolerance": "0.41999999999999998",
             "wire_diameter": "7"
         }
     }
