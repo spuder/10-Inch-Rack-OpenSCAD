@@ -2,10 +2,10 @@ rack_width = 254.0; // [ 254.0:10 inch, 152.4:6 inch]
 // Height of the rack in U units, can be a fraction for partial U (e.g. 1.5 for 1U plus half of the next U)
 rack_height = 1.0; // [0.5:0.5:5]
 
-
 component_width = 110.0;
 component_depth = 122.0;
 component_height = 28.30;
+component_offset = 0;  // [-100:0.1:100]
 
 // ========================================
 /* [Keystones] */
@@ -110,7 +110,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     // Create the main body as a separate module
     module main_body() {
-        side_margin = (rack_width - chassis_width) / 2;
+        side_margin = ((rack_width - chassis_width) / 2) + component_offset;
         chassis_height = min(switch_height + (2 * case_thickness), height);
         union() {
             // Front panel
@@ -130,11 +130,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             lip_thickness = 1.2;
             lip_depth = 0.60;
             // Main cutout minus lip (centered)
-            
-            // add offset
-            
             translate([
-                (rack_width - (cutout_w - 2*lip_thickness)) / 2,
+                ((rack_width - (cutout_w - 2*lip_thickness)) / 2) + component_offset,
                 (height - (cutout_h - 2*lip_thickness)) / 2,
                 -tolerance
             ]) {
@@ -142,7 +139,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             }
             // Switch cutout above the lip (centered)
             translate([
-                (rack_width - cutout_w) / 2,
+                ((rack_width - cutout_w) / 2) + component_offset,
                 (height - cutout_h) / 2,
                 lip_depth
             ]) {
@@ -153,7 +150,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             z_start = front_plate_hole ? -tolerance : front_plate_thickness;
             z_depth = front_plate_hole ? chassis_depth_main + 2*tolerance : chassis_depth_main - front_plate_thickness + tolerance;
             translate([
-                (rack_width - cutout_w) / 2,
+                ((rack_width - cutout_w) / 2) + component_offset,
                 (height - cutout_h) / 2,
                 z_start
             ]) {
@@ -210,8 +207,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Power wire cutouts: configurable diameter holes at top and bottom rack hole positions
     module power_wire_cutouts() {
         hole_spacing_x = switch_width; // match rack holes
-        hole_left_x = (rack_width - hole_spacing_x) / 2 - (wire_diameter /5);
-        hole_right_x = (rack_width + hole_spacing_x) / 2 + (wire_diameter /5);
+        hole_left_x = (rack_width - hole_spacing_x) / 2 - (wire_diameter /5) + component_offset;
+        hole_right_x = (rack_width + hole_spacing_x) / 2 + (wire_diameter /5) + component_offset;
         // Midplane of switch opening
         mid_y = (height - switch_height) / 2 + switch_height / 2;
         for (side_x = [hole_left_x, hole_right_x]) {
@@ -228,14 +225,14 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         // Zip tie holes
         zip_z = switch_depth + solid_z_offset;
         for (i = [0:zip_tie_hole_count-1]) {
-            x_pos = (rack_width - switch_width)/2 + (switch_width/(zip_tie_hole_count+1)) * (i+1);
+            x_pos = (rack_width - switch_width)/2 + component_offset + (switch_width/(zip_tie_hole_count+1)) * (i+1);
             translate([x_pos, 0, zip_z]) {
                 cube([zip_tie_hole_width, height, zip_tie_hole_length]);
             }
         }
 
         // Zip tie indents (top and bottom)
-        x_pos = (rack_width - switch_width)/2;
+        x_pos = ((rack_width - switch_width)/2) + component_offset;
         chassis_height = min(switch_height + (2 * case_thickness), height);
         // Bottom indent
         translate([x_pos, (height - chassis_height)/2, zip_z]) {
@@ -273,7 +270,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         actual_grid_depth = (z_rows - 1) * spacing_z;
 
         // Center the grid within the switch cutout area
-        cutout_center_x = rack_width / 2;
+        cutout_center_x = (rack_width / 2) + component_offset;
         cutout_center_z = front_plate_thickness + switch_depth / 2;
 
         x_start = cutout_center_x - actual_grid_width / 2;
