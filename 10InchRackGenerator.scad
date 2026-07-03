@@ -10,10 +10,9 @@ component_height = 28.30;
 // ========================================
 /* [Keystones] */
 // Add keystone jacks to the front panel
-keystones = false; 
-keystone_left = true;
-keystone_right = true;
-// [true: Place keystone jacks, false: Remove keystone jacks]
+keystones = false;    // [true: Place keystone jacks, false: Remove keystone jacks]
+keystone_left = true;  // [true: Place keystone jack on the left, false: Remove left keystone jack]
+keystone_right = true; // [true: Place keystone jack on the right, false: Remove right keystone jacks]
 
 // ========================================
 /* [Holes] */
@@ -135,7 +134,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             // add offset
             
             translate([
-                (rack_width - (cutout_w - 2*lip_thickness )) / 2,
+                (rack_width - (cutout_w - 2*lip_thickness)) / 2,
                 (height - (cutout_h - 2*lip_thickness)) / 2,
                 -tolerance
             ]) {
@@ -470,10 +469,10 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 }
                 
                 if (keystones) {
-                    if (keystone_left) {      
+                    if (keystone_left) {      //Cutout for left Keystone
                         keystone_front_cutout();
                     }
-                    if (keystone_right){
+                    if (keystone_right){     //Cutout for Right Keystone
                         translate([rack_width, 0, 0]) mirror([1, 0, 0])
                         keystone_front_cutout();
                     }
@@ -482,11 +481,10 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         }
        if (keystones) {
            //rotate([90,0,0]) maps keystone Y→rack Z (depth), keystone Z→rack -Y (compensated by +keystone_outer_height in translate)
-           if (keystone_left){
+           if (keystone_left){    //Make left Keystone
             translate([keystone_tx, keystone_ty + keystone_outer_height, 0]) rotate([90,0,0]) keystone();
            }
-           
-          if (keystone_right){
+          if (keystone_right){   //Make right Keystone
             translate([rack_width, 0, 0]) mirror([1, 0, 0])
             translate([keystone_tx, keystone_ty + keystone_outer_height, 0]) rotate([90,0,0]) keystone();
           }
