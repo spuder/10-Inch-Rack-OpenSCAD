@@ -10,7 +10,10 @@ component_height = 28.30;
 // ========================================
 /* [Keystones] */
 // Add keystone jacks to the front panel
-keystones = false; // [true: Place keystone jacks, false: Remove keystone jacks]
+keystones = false; 
+keystone_left = true;
+keystone_right = true;
+// [true: Place keystone jacks, false: Remove keystone jacks]
 
 // ========================================
 /* [Holes] */
@@ -128,8 +131,11 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             lip_thickness = 1.2;
             lip_depth = 0.60;
             // Main cutout minus lip (centered)
+            
+            // add offset
+            
             translate([
-                (rack_width - (cutout_w - 2*lip_thickness)) / 2,
+                (rack_width - (cutout_w - 2*lip_thickness )) / 2,
                 (height - (cutout_h - 2*lip_thickness)) / 2,
                 -tolerance
             ]) {
@@ -462,17 +468,28 @@ module switch_mount(switch_width, switch_height, switch_depth) {
                 if (air_holes) {
                     air_holes();
                 }
+                
                 if (keystones) {
-                    keystone_front_cutout();
-                    translate([rack_width, 0, 0]) mirror([1, 0, 0]) keystone_front_cutout();
+                    if (keystone_left) {      
+                        keystone_front_cutout();
+                    }
+                    if (keystone_right){
+                        translate([rack_width, 0, 0]) mirror([1, 0, 0])
+                        keystone_front_cutout();
+                    }
                 }
             }
         }
-        if (keystones) {
-            // rotate([90,0,0]) maps keystone Y→rack Z (depth), keystone Z→rack -Y (compensated by +keystone_outer_height in translate)
+       if (keystones) {
+           //rotate([90,0,0]) maps keystone Y→rack Z (depth), keystone Z→rack -Y (compensated by +keystone_outer_height in translate)
+           if (keystone_left){
             translate([keystone_tx, keystone_ty + keystone_outer_height, 0]) rotate([90,0,0]) keystone();
+           }
+           
+          if (keystone_right){
             translate([rack_width, 0, 0]) mirror([1, 0, 0])
-                translate([keystone_tx, keystone_ty + keystone_outer_height, 0]) rotate([90,0,0]) keystone();
+            translate([keystone_tx, keystone_ty + keystone_outer_height, 0]) rotate([90,0,0]) keystone();
+          }
         }
     }
 }
