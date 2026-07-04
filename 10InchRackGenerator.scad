@@ -18,6 +18,8 @@ keystone_right = true; // [true: Place keystone jack on the right, false: Remove
 /* [Holes] */
 // Adds small cutout a USB or Power cable could be routed through to the front
 front_wire_holes = false; // [true:Show front wire holes, false:Hide front wire holes]
+front_wire_hole_left = true; // [true:Show left wire hole, false:Hide left wire hole]
+front_wire_hole_right = true; // [true:Show right wire hole, false:Hide right wire hole]
 // Diameter of wire to route through front_wire_holes.
 wire_diameter = 7; // Diameter of power wire holes
 // Adds hexagon air cutouts to reduce material and improve cooling.
@@ -206,20 +208,21 @@ module switch_mount(switch_width, switch_height, switch_depth) {
 
     // Power wire cutouts: configurable diameter holes at top and bottom rack hole positions
     module power_wire_cutouts() {
+        mid_y = (height - switch_height) / 2 + switch_height / 2; // Midplane of switch opening
         hole_spacing_x = switch_width; // match rack holes
-        hole_left_x = (rack_width - hole_spacing_x) / 2 - (wire_diameter /5) + component_offset;
-        hole_right_x = (rack_width + hole_spacing_x) / 2 + (wire_diameter /5) + component_offset;
-        // Midplane of switch opening
-        mid_y = (height - switch_height) / 2 + switch_height / 2;
-        for (side_x = [hole_left_x, hole_right_x]) {
-            translate([side_x, mid_y, 0]) {
-                linear_extrude(height = chassis_depth_main) {
-                    circle(d=wire_diameter);
-                }
+        if (front_wire_hole_left){   //make left hole
+            hole_left_x = (rack_width - hole_spacing_x) / 2 - (wire_diameter /5) + component_offset;
+            translate([hole_left_x, mid_y, 0]) {
+                linear_extrude(height = chassis_depth_main) {circle(d=wire_diameter);}
+            }
+        }
+        if (front_wire_hole_right){   //make right hole
+            hole_right_x = (rack_width + hole_spacing_x) / 2 + (wire_diameter /5) + component_offset;
+            translate([hole_right_x, mid_y, 0]) {
+                linear_extrude(height = chassis_depth_main) {circle(d=wire_diameter);}
             }
         }
     }
-    
     // Create zip tie holes and indents
     module zip_tie_features() {
         // Zip tie holes
