@@ -257,7 +257,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
         // Chassis dimensions used by both hole sections
         chassis_height = min(switch_height + (2 * case_thickness), height);
         chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
-        side_margin = (rack_width - chassis_width) / 2;
+        side_margin = ((rack_width - chassis_width) / 2) + component_offset;
 
         // TOP/BOTTOM FACE HOLES (Y-axis, penetrating top and bottom chassis walls)
         // Calculate available space for holes within switch dimensions
