@@ -33,11 +33,11 @@ module keystone(
                 // Make solid cube
                 cube([jack_width+wall,jack_depth,jack_height+wall]);
             // Cut out the front hole
-            translate([(jack_width+wall-front_hole_width)/2,0,front_hole_z_offset])
+            translate([(jack_width+wall-front_hole_width)/2,-e,front_hole_z_offset])
                 color("blue")
                 cube([front_hole_width,jack_depth+wall,front_hole_height]);
             // Cut out the back hole. It should be extruded to front_large_catch_depth
-            translate([(jack_width+wall-front_hole_width)/2,front_large_catch_depth,back_hole_z_offset])
+            translate([(jack_width+wall-front_hole_width)/2,front_large_catch_depth - e,back_hole_z_offset ])
                 color("red")
                 cube([front_hole_width,jack_depth+wall-front_large_catch_depth,back_hole_height]);
 
