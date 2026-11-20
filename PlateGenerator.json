@@ -1,0 +1,50 @@
+{
+    "fileFormatVersion": "1",
+    "parameterSets": {
+        "10 keystones": {
+            "corner_radius": "4",
+            "front_thickness": "3",
+            "half_height_holes": "true",
+            "keystones": "10",
+            "rack_height": "1",
+            "rack_width": "254",
+            "ribs": "true"
+        },
+        "8 keystones": {
+            "corner_radius": "4",
+            "front_thickness": "3",
+            "half_height_holes": "true",
+            "keystones": "8",
+            "rack_height": "1",
+            "rack_width": "254",
+            "ribs": "true"
+        },
+        "6 keystones": {
+            "corner_radius": "4",
+            "front_thickness": "3",
+            "half_height_holes": "true",
+            "keystones": "6",
+            "rack_height": "1",
+            "rack_width": "254",
+            "ribs": "true"
+        },
+        "4 keystones": {
+            "corner_radius": "4",
+            "front_thickness": "3",
+            "half_height_holes": "true",
+            "keystones": "4",
+            "rack_height": "1",
+            "rack_width": "254",
+            "ribs": "true"
+        },
+        "5 keystones": {
+            "corner_radius": "4",
+            "front_thickness": "3",
+            "half_height_holes": "true",
+            "keystones": "5",
+            "rack_height": "1",
+            "rack_width": "254",
+            "ribs": "true"
+        }
+    }
+}
