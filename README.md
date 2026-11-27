@@ -6,8 +6,7 @@
 
 - [Description](#description)
 - [Quick Start](#quick-start)
-- [Available Scripts](#available-scripts)
-- [Project Structure](#project-structure)
+- [Available Files](#available-Files)
 - [Contributors](#contributors)
 - [Contributing](#contributing)
 - [License](#license)
@@ -18,47 +17,22 @@ Opescad files that can be used to make(3D Print) a whole 10in server rack from f
 
 ## ⚡ Quick Start
 
-```bash
+Head to Maker World to use the files without any CAD programs
+- ![10in-server-rack-mount-generator](https://makerworld.com/en/models/3331930-10in-server-rack-mount-generator)
+- ![10in-server-rack-frame-generator](https://makerworld.com/en/models/3313342-10in-server-rack-frame-generator)
 
+or
+
+```bash
 # 1. Clone the repository
 git clone https://github.com/0310njs/Server-Rack-Generator-Openscad/tree/Stans-Branch.git
-
-# See the Development Setup section below
 ```
 
-## 🚀 Available Scripts
+## 🚀 Available Files
 
-- **all** — `make all`
-- **test** — `make test`
-- **test** — `make test`
-- **test-stl** — `make test-stl`
-- **test-all** — `make test-all`
-- **preview** — `make preview`
-- **clean** — `make clean`
-
-## 📁 Project Structure
-
-```
-.
-├── 10InchRackFrameGenerator.json
-├── 10InchRackFrameGenerator.scad
-├── 10InchRackMountGenerator.json
-├── 10InchRackMountGenerator.scad
-├── KeystoneJack.json
-├── KeystoneJack.scad
-├── LICENSE
-├── Other
-│   ├── CHANGELOG.md
-│   └── README-MAKERWORLD.md
-├── PlateGenerator.json
-├── PlateGenerator.scad
-└── test
-    ├── Makefile
-    ├── common.bash
-    ├── rack.bats
-    ├── rack_stl.bats
-    └── slids.bats
-```
+- 10InchRackMountGenerator.scad
+- 10InchRackFrameGenerator.scad
+- PlateGenerator.scad
 
 ## 👥 Contributors
 
@@ -88,13 +62,3 @@ Please follow the existing code style and include tests for new behavior where a
 ## 📜 License
 
 This project is licensed under the **MIT** License.
-
----
-
-<div align="center">
-
-[![Made with ReadmeBuddy](https://img.shields.io/badge/Made%20with-ReadmeBuddy-8B5CFF?style=for-the-badge&logo=markdown&logoColor=white)](https://readmebuddy.com)
-
-<sub>Generate beautiful READMEs in seconds → <a href="https://readmebuddy.com">readmebuddy.com</a></sub>
-
-</div>
