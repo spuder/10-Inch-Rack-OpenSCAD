@@ -18,8 +18,9 @@ Opescad files that can be used to make(3D Print) a whole 10in server rack from f
 ## ⚡ Quick Start
 
 Head to Maker World to use the files without any CAD programs
-- ![10in-server-rack-mount-generator](https://makerworld.com/en/models/3331930-10in-server-rack-mount-generator)
-- ![10in-server-rack-frame-generator](https://makerworld.com/en/models/3313342-10in-server-rack-frame-generator)
+
+- [10in-server-rack-mount-generator](https://makerworld.com/en/models/3331930-10in-server-rack-mount-generator)
+- [10in-server-rack-frame-generator](https://makerworld.com/en/models/3313342-10in-server-rack-frame-generator)
 
 or
 
