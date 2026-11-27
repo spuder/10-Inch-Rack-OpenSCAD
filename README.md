@@ -4,12 +4,12 @@
 
 ## 📑 Table of Contents
 
-- [Description](#description)
-- [Quick Start](#quick-start)
-- [Available Files](#available-Files)
-- [Contributors](#contributors)
-- [Contributing](#contributing)
-- [License](#license)
+- [Description](#-description)
+- [Quick Start](#-quick-start)
+- [Available Files](#-available-Files)
+- [Contributors](#-contributors)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ## 📝 Description
 
