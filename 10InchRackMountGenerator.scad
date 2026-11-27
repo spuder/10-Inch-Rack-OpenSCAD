@@ -9,9 +9,9 @@ rack_height = 1.0; // [0.5:0.5:5.5]
 front_plate_thickness = 3.0;
 // Guide rails show the suggested boundrys of the mounts of the rack.(guide rails will not show up in final rendering).
 guide_rails_on = true;
-// ============================================================================================
+//============================================================================================
 /* [Component1] */
-component1 = 1; // [1: Insert Mount, 2: Shelf Mount, 3: Hard Drive Mount, 4: disable]
+component1 = 1; // [1: Insert Mount, 2: Shelf Mount, 3: Drawer Mount, 4: Hard Drive Mount, 5: disable]
 component1_width = 110.0;
 component1_depth = 122.0;
 component1_height = 28.30;
@@ -27,9 +27,9 @@ component1_wire_diameter=7; // Diameter of power wire holes
 component1_air_holes=true; // [true:Show air holes, false:Hide air holes]
 // cutout a big openings in place of air holes on sides. good for if  you have ports on the sides.
 component1_side_windows=false; // [true:cutout big openings on sides, false:dont do that.]
-// ============================================================================================
+//============================================================================================
 /* [Component2] */
-component2 = 4; // [1: Insert Mount, 2: Shelf Mount, 3: Hard Drive Mount, 4: disable]
+component2 = 4; // [1: Insert Mount, 2: Shelf Mount, 3: Drawer Mount, 4: Hard Drive Mount, 5: disable]
 component2_width = 110.0;
 component2_depth = 122.0;
 component2_height = 28.30;
@@ -45,9 +45,9 @@ component2_wire_diameter=7; // Diameter of power wire holes
 component2_air_holes=true; // [true:Show air holes, false:Hide air holes]
 // cutout a big openings in place of air holes on sides. good for if  you have ports on the sides.
 component2_side_windows=false; // [true:cutout big openings on sides, false:dont do that.]
-// ============================================================================================
+//============================================================================================
 /* [Component3] */
-component3 = 4; // [1: Insert Mount, 2: Shelf Mount, 3: Hard Drive Mount, 4: disable]
+component3 = 4; // [1: Insert Mount, 2: Shelf Mount, 3: Drawer Mount, 4: Hard Drive Mount, 5: disable]
 component3_width = 110.0;
 component3_depth = 122.0;
 component3_height = 28.30;
@@ -63,7 +63,7 @@ component3_wire_diameter=7; // Diameter of power wire holes
 component3_air_holes=true; // [true:Show air holes, false:Hide air holes]
 // cutout a big openings in place of air holes on sides. good for if  you have ports on the sides.
 component3_side_windows=false; // [true:cutout big openings on sides, false:dont do that.]
-// ============================================================================================
+//============================================================================================
 /* [Keystone group 1] */
 // Add keystone jacks to the front panel.
 keystones1 = false;    // [true: Place keystone jacks, false: Remove keystone jacks]
@@ -79,7 +79,7 @@ keystones1_num = 1; // [1:1:10]
 keystones1_spaceing = 0; // [0:0.1:20]
 //Enabling this feature will stack the keystones vertically instead of horazontally
 keystones1_vertical = false;
-// ============================================================================================
+//============================================================================================
 /* [Keystone group 2] */
 // Add keystone jacks to the front panel.
 keystones2 = false;    // [true: Place keystone jacks, false: Remove keystone jacks]
@@ -95,7 +95,7 @@ keystones2_num = 1; // [1:1:10]
 keystones2_spaceing = 0; // [0:0.1:20]
 //Enabling this feature will stack the keystones vertically instead of horazontally
 keystones2_vertical = false;
-// ============================================================================================
+//============================================================================================
 /* [Air Hole Settings] */
 // size of struts between hexs.
 hex_strut = 4; // [1:1:14]
@@ -103,7 +103,17 @@ hex_strut = 4; // [1:1:14]
 hex_spacing = 15;
 // controls the thickness of the frame around the  hex cutout.
 hex_bottom_frame = 10;  // [8:0.5:13]
-// ============================================================================================
+//============================================================================================
+/* [Drawer Handle Settings] */
+//Length from top of the drawer to the bottom of the handle.
+handle_height = 7;
+//Length from side of the handle to the other side of it.
+handle_width = 20;
+//Radius of the bottom inner corners of the handle.
+handle_bottom_fillet = 3;
+//The top corners of the handle is based on handle_height and handle_bottom_fillet. This limits how big it can get.
+limit_fillet = 6;
+//============================================================================================
 /* [Advanced] */
 // Used when rack_height is a fraction, cuts a half oval for screws, otherwise will cover up the hole
 half_height_holes = true; // [true:Show partial holes at edges, false:Hide partial holes]
@@ -119,9 +129,10 @@ stopper_size=10;
 tolerance = 0.42;
 //Cooming soon
 PCB_mount=false;
-// ============================================================================================
+//============================================================================================
 /* [Hidden] */
 height = 44.45 * rack_height;
+lip_offset = .6;
 //ziptie variables
 zip_tie_hole_count = 8;
 zip_tie_hole_width = 1.5;
@@ -136,6 +147,8 @@ keystone_depth = 9.7;
 e=0.01; 
 //***********************************End parameters*********************************//
 //***********************************Helper Modules*********************************//
+{// General Modules
+// Makes a temp red rail on both sides of the mounting plate to show rec placement limit for component mounts.
 module guide_rails(){
     
     translate([-105, 0, 2.9])
@@ -145,7 +158,9 @@ module guide_rails(){
     color("red")
     cuboid([3, height, 6], chamfer=1, edges=["ALL"], $fn = 5);
 }
-module keystone(){
+
+// Builds one keystonejack mounting hole.
+module build_keystone(){
     // This module makes one cuboid then cuts it with three more and one cut for the triangle.
     
     hole_width=14.9;
@@ -186,55 +201,77 @@ module keystone(){
                         circle(r=3, $fn=3);
         } 
 }
-// Power wire cutouts: Make holes on left and/or right of the component_mount
-module cut_power_wire_holes(component_width, component_height, component_depth, component_side_offset, component_up_offset, front_wire_holes, wire_diameter, component_90) {
-    
-    // When the front is solid the switch slides in from the back, so everything
-    // shifts rearward by front_plate_thickness to keep zip ties at the switch's back face.
-    solid_z_offset = front_plate_hole ? 0 : front_plate_thickness;
-    chassis_depth_main = component_depth + zip_tie_cutout_depth + solid_z_offset;
-        
-    mid_y = - component_up_offset; // Midplane of switch opening
-    hole_spacing_x = component_width; // match rack holes
-        
-    if (front_wire_holes == 1 || front_wire_holes == 2){   //make left hole
-        hole_left_x = (-component_width) / 2 - (wire_diameter /5) + component_side_offset;
-        translate([hole_left_x, mid_y, -.1]) {
-            linear_extrude(height = chassis_depth_main + .2) {circle(d=wire_diameter, $fn = 20);}
-            }
-    }
-    if (front_wire_holes == 1 || front_wire_holes == 3){   //make right hole
-        hole_right_x = (component_width) / 2 + (wire_diameter /5) + component_side_offset;
-        translate([hole_right_x, mid_y, -.1]) {
-            linear_extrude(height = chassis_depth_main + .2) {circle(d=wire_diameter, $fn = 20);}
-            }
-    }
-}
+
+// Builds a rounded rec body with matching cut out centered facing the the mounting plate.
 module build_component_body(component_width, component_height, component_depth, component_side_offset, component_up_offset){
   {//Varibles
   chassis_edge_radius = 2.0;
   no_front_cutout = front_plate_hole ? 0 : front_plate_thickness + tolerance;
   $fn = 64;
   }
-  //used to make a sold roubded square to be cut up.
-  module body(){
-    translate([component_side_offset,- component_up_offset, (component_depth + zip_tie_cutout_depth +  no_front_cutout)/2])
-      cuboid([component_width + (2 * case_thickness), component_height + (2 * case_thickness), component_depth + zip_tie_cutout_depth +  no_front_cutout - front_plate_thickness], rounding = chassis_edge_radius, edges=["Z"], $fn = 20);
+  //used to make a sold rounded square to be cut up.
+  module build_body(){
+    translate([component_side_offset,- component_up_offset, (component_depth +  no_front_cutout + lip_offset)/2])
+      cuboid([component_width + (2 * case_thickness), component_height + (2 * case_thickness), component_depth +lip_offset + no_front_cutout ], rounding = chassis_edge_radius, edges=["Z"], $fn = 20);
   }
   // used to create cutout for the componet
-  module component_cutout(){
-    translate([component_side_offset, - component_up_offset,(component_depth + zip_tie_cutout_depth+ 2*tolerance)/2]) 
-      cube([component_width + (2 * tolerance), component_height + (2 * tolerance), component_depth + zip_tie_cutout_depth+ 2*tolerance+ no_front_cutout], center = true);
+  module cut_component_cutout(){
+    translate([component_side_offset, - component_up_offset,(component_depth + 2*tolerance)/2]) 
+      cube([component_width + (2 * tolerance), component_height + (2 * tolerance), component_depth + 2*tolerance + lip_offset + no_front_cutout], center = true);
   }
   difference() {
-    body();
-    component_cutout();
+    build_body();
+    cut_component_cutout();
   }
 }
+
+// Builds an extention of the component body to the back end of the component body. "component_ext" is the controling varible for how much the body is extened.
+module build_ext_component_body(component_width, component_height, component_depth, component_side_offset, component_up_offset, component_ext){
+  {//Varibles
+  chassis_edge_radius = 2.0;
+  no_front_cutout = front_plate_hole ? 0 : front_plate_thickness + tolerance;
+  $fn = 64;
+  }
+  //used to make a sold rounded square to be cut up.
+  module build_body(){
+    translate([component_side_offset, - component_up_offset, component_depth + lip_offset + ((component_ext + no_front_cutout)/2)-e])
+      cuboid([component_width + (2 * case_thickness), component_height + (2 * case_thickness), component_ext + no_front_cutout ], rounding = chassis_edge_radius, edges=["Z"], $fn = 20);
+  }
+  // used to create cutout for the componet
+  module cut_component_cutout(){
+    translate([ component_side_offset, - component_up_offset, component_depth + lip_offset + (component_ext + no_front_cutout )/2-e]) 
+      cube([component_width + (2 * tolerance), component_height + (2 * tolerance), component_ext + no_front_cutout +e], center = true);
+  }
+  difference() {
+    build_body();
+    cut_component_cutout();
+  }
+}
+
+// builds a small lip around the edges of the cutout of the component at the mounting plate end.
+module build_lip(component_width, component_height, component_depth, component_side_offset, component_up_offset){
+  if(front_lip){
+    difference() {
+      translate([component_side_offset, - component_up_offset, 0])
+        rect_tube(size=[component_width + tolerance*2,component_height + tolerance*2], wall=lip_offset, h=lip_offset, $fn = 10);
+    }
+  }
+}
+
+// builds small triangle stoppers on the back end of the component body farthest from the mounting plate.
+module build_stopper(component_width, component_height, component_depth, component_side_offset, component_up_offset){
+  no_front_cutout = front_plate_hole ? 0 : front_plate_thickness + tolerance;
+  translate([component_side_offset - component_width/2-2, component_height/2 + case_thickness/2 - component_up_offset, component_depth +  no_front_cutout + 3.5 + tolerance])rotate([90,90,0])
+      wedge([3,stopper_size,stopper_size]);
+  translate([component_side_offset + component_width/2+2, component_height/2 + case_thickness/2 - component_up_offset, component_depth +  no_front_cutout + lip_offset + tolerance])rotate([90,-90,0])
+      wedge([3,stopper_size,stopper_size]);
+}
+
+// Makes a cutout on the backend of the component body farthest from the mounting plate for zipties.
 module cut_zip_tie_holes(component_width, component_height, component_depth, component_side_offset, component_up_offset) {
   no_front_cutout = front_plate_hole ? 0 : front_plate_thickness + tolerance;
   // Zip tie holes
-  zip_z = component_depth + no_front_cutout + 2.5;
+  zip_z = component_depth + (zip_tie_cutout_depth/2) + no_front_cutout + lip_offset;
   for (i = [0:zip_tie_hole_count - 1]) {
       x_pos = (component_width)/2 + component_side_offset - (component_width/(zip_tie_hole_count + 1)) * (i+1);
       translate([x_pos, - component_up_offset, zip_z]) {
@@ -244,14 +281,16 @@ module cut_zip_tie_holes(component_width, component_height, component_depth, com
   // Zip tie indents (top and bottom)
   x_pos = component_side_offset;
   // Top indent
-  translate([x_pos, (- (component_height+(2*case_thickness))/2) + - component_up_offset, zip_z]) {
+  translate([x_pos, (- (component_height+(2*case_thickness))/2) - component_up_offset, zip_z]) {
       cube([component_width, zip_tie_indent_depth + e, zip_tie_cutout_depth + e], center = true);
   }
   // Bottom indent
-  translate([x_pos, ((component_height+(2*case_thickness))/2) + - component_up_offset, zip_z]) {
+  translate([x_pos, ((component_height+(2*case_thickness))/2) - component_up_offset, zip_z]) {
       cube([component_width, zip_tie_indent_depth + e , zip_tie_cutout_depth + e], center = true);
   }
 }
+
+// Cuts out hexagon holes on both top and bottom, and the sides of the component body.
 module cut_air_holes(component_width, component_height, component_depth, component_side_offset, component_up_offset, air_holes){
         
   test_hex_fit_Y = (component_height + case_thickness*2) - ( hex_spacing + hex_bottom_frame*2);
@@ -277,27 +316,40 @@ module cut_air_holes(component_width, component_height, component_depth, compone
     }
   }
 }
-module build_lip(component_width, component_height, component_depth, component_side_offset, component_up_offset){
-  if(front_lip){
-    difference() {
-      translate([component_side_offset, - component_up_offset, 0])
-        rect_tube(size=[component_width + tolerance*2,component_height + tolerance*2], wall=.6, h=.6, $fn = 10);
+
+// Power wire cutouts: Make holes on left and/or right of the component_mount.
+module cut_power_wire_holes(component_width, component_height, component_depth, component_side_offset, component_up_offset, front_wire_holes, wire_diameter, component_90) {
+    
+    // When the front is solid the switch slides in from the back, so everything
+    // shifts rearward by front_plate_thickness to keep zip ties at the switch's back face.
+    solid_z_offset = front_plate_hole ? 0 : front_plate_thickness;
+    chassis_depth_main = component_depth + zip_tie_cutout_depth + solid_z_offset;
+        
+    mid_y = - component_up_offset; // Midplane of switch opening
+    hole_spacing_x = component_width; // match rack holes
+        
+    if (front_wire_holes == 1 || front_wire_holes == 2){   //make left hole
+        hole_left_x = (-component_width) / 2 - (wire_diameter /5) + component_side_offset;
+        translate([hole_left_x, mid_y, -.1]) {
+            linear_extrude(height = chassis_depth_main + .2) {circle(d=wire_diameter, $fn = 20);}
+            }
     }
-  }
+    if (front_wire_holes == 1 || front_wire_holes == 3){   //make right hole
+        hole_right_x = (component_width) / 2 + (wire_diameter /5) + component_side_offset;
+        translate([hole_right_x, mid_y, -.1]) {
+            linear_extrude(height = chassis_depth_main + .2) {circle(d=wire_diameter, $fn = 20);}
+            }
+    }
 }
+
+// cuts out the whole top part of the component body
 module cut_top(component_width, component_height, component_depth, component_side_offset, component_up_offset){
   no_front_cutout = front_plate_hole ? 0 : front_plate_thickness + tolerance;
   translate([component_side_offset, - component_height/2 - component_up_offset - e, (component_depth + zip_tie_cutout_depth +  no_front_cutout)/2])
     cube([component_width + (tolerance*2) ,case_thickness*2,component_depth + zip_tie_cutout_depth +  no_front_cutout], center = true);
 }
-module build_stopper(component_width, component_height, component_depth, component_side_offset, component_up_offset){
-  no_front_cutout = front_plate_hole ? 0 : front_plate_thickness + tolerance;
-  translate([component_side_offset - component_width/2-2, component_height/2 + case_thickness/2 - component_up_offset, component_depth + zip_tie_cutout_depth +  no_front_cutout-1.5])rotate([90,90,0])
-      wedge([3,stopper_size,stopper_size]);
-  translate([component_side_offset + component_width/2+2, component_height/2 + case_thickness/2 - component_up_offset, component_depth + zip_tie_cutout_depth +  no_front_cutout-4.5])rotate([90,-90,0])
-      wedge([3,stopper_size,stopper_size]);
-}
-//Cuts out the sides of the mount when component_side_windows in true
+
+//Cuts out the sides of the component.
 module cut_side_windows(component_width, component_height, component_depth, component_side_offset, component_up_offset, component_side_windows){
   if(component_side_windows){
     frame_offset = 8;
@@ -305,7 +357,59 @@ module cut_side_windows(component_width, component_height, component_depth, comp
       cube(([component_width + case_thickness*2 + e*2,component_height - frame_offset,component_depth - zip_tie_cutout_depth - frame_offset]), center = true);
   }
 }
+}
+{// Drawer Modules
+//Builds tray like rectangle body with  handle cutout.
+module build_drawer_body(component_width, component_height, component_depth, component_side_offset, component_up_offset){
+  {//Varibles
+  no_front_cutout = front_plate_hole ? 0 : front_plate_thickness + tolerance;
+  drawer_wall_thickness = 2;
+  check_fillet = handle_height - handle_bottom_fillet;
+  handle_top_fillet = check_fillet > limit_fillet ? limit_fillet : check_fillet;
+  }
+  //used to make a cube to be cut up.
+  module build_body(){
+    translate([component_side_offset,- component_up_offset, (component_depth + lip_offset)/2])
+      cuboid([component_width - (tolerance*2), component_height - (tolerance*2), component_depth + lip_offset], chamfer = 2, edges=[TOP+BACK], $fn = 20);
+  }
+  // used to create cutout for the drawer
+  module cut_drawer_cutout(){
+    translate([component_side_offset, - component_up_offset - drawer_wall_thickness,(component_depth + lip_offset)/2]) 
+    cuboid([component_width - (2 * tolerance) - (drawer_wall_thickness*2), component_height - (2 * tolerance), component_depth - lip_offset - (drawer_wall_thickness*2)], rounding = component_height*.3, edges=[TOP+BACK], $fn = 20);
+    translate([0,-(component_height/2)+((component_height*.2)/2) + tolerance-e, component_depth/2 + (component_depth*.3)/2-drawer_wall_thickness])
+      cuboid([component_width,(component_height*.2),(component_depth*.7)], chamfer = (component_height*.2), edges=[BOTTOM+BACK]);
+  }
+  //used to make a cut in the drawer main body to be used as a handle.
+  module cut_drawer_handle(){
+    translate([0,-(component_height/2)+(handle_height/2) + tolerance-e, (drawer_wall_thickness + lip_offset)/2 ])
+      cuboid([handle_width, handle_height, drawer_wall_thickness + lip_offset+e], rounding = handle_bottom_fillet, edges=[LEFT+BACK, RIGHT+BACK], $fn = 40);
+    translate([handle_width/2,-(component_height/2) + tolerance-e, (drawer_wall_thickness + lip_offset)/2])
+      fillet(l=drawer_wall_thickness + lip_offset+e, r=handle_top_fillet, ang=90, $fn = 40);
+    translate([-handle_width/2,-(component_height/2) + tolerance-e, (drawer_wall_thickness + lip_offset)/2])
+    rotate([0,180,0])
+      fillet(l=drawer_wall_thickness + lip_offset+e, r=handle_top_fillet, ang=90, $fn = 40);
+  }
+  difference(){
+    build_body();
+    cut_drawer_cutout();
+    cut_drawer_handle();
+  }
+}
 
+//Builds a stops into the component mount ment to stop the drawer from pulling out.
+module build_drawer_stops(component_width, component_height, component_depth, component_side_offset, component_up_offset){
+  size_check = component_height*.20;
+  stop_size = size_check >= 4 ? 4 : component_height*.20;
+  
+  translate([((component_width + tolerance*2)/2)-(stop_size/2), -((component_height + tolerance*2)/2)+(stop_size/2), (component_depth*.3) + (stop_size*.4)])
+    cuboid([ stop_size, stop_size, stop_size*2], chamfer = stop_size, edges=[BOTTOM+BACK]);
+  translate([-((component_width + tolerance*2)/2)+(stop_size/2), -((component_height + tolerance*2)/2)+(stop_size/2), (component_depth*.3) + (stop_size*.4)])
+    cuboid([ stop_size, stop_size, stop_size*2], chamfer = stop_size, edges=[BOTTOM+BACK]);
+}
+}
+{// Future Work
+//######################################################################//
+//Code for later features
 module add_standoffs(){
 
     out_d = 5.5;
@@ -342,8 +446,9 @@ module gpu_sheild_cutout(){
       cube([40, 40 , 5], center = true);
       }
 }
-
-//***********************************Helper Modules*********************************//
+//######################################################################//
+}
+//**************************************Helper Modules************************************//
 //***********************************Main Building Modules*********************************//
 // front_panel: used to create Rack panel with mounting holes
 module front_panel(){
@@ -438,11 +543,14 @@ module front_panel(){
         component_front_cutout(component3, component3_width, component3_height, component3_depth, component3_side_offset, component3_up_offset, component3_wire_holes, component3_wire_diameter, component3_90 );
     }
 }
+{// Mounts
+//  Builds insert typr mount.
 module insert_mount(component_width, component_height, component_depth, component_side_offset, component_up_offset, front_wire_holes, component_wire_diameter, air_holes, component_side_windows) {
   
   difference(){
     union(){
       build_component_body(component_width, component_height, component_depth, component_side_offset, component_up_offset);
+      build_ext_component_body(component_width, component_height, component_depth, component_side_offset, component_up_offset, zip_tie_cutout_depth);
       build_lip(component_width, component_height, component_depth, component_side_offset, component_up_offset);
       }
     cut_zip_tie_holes(component_width, component_height, component_depth, component_side_offset, component_up_offset);
@@ -451,11 +559,14 @@ module insert_mount(component_width, component_height, component_depth, componen
     cut_power_wire_holes(component_width, component_height, component_depth, component_side_offset, component_up_offset, front_wire_holes, component_wire_diameter);
   }
 }
+
+// Builds a shelf type mount.
 module shelf_mount(component_width, component_height, component_depth, component_side_offset, component_up_offset, front_wire_holes, component_wire_diameter, air_holes, component_side_windows) {
 
   difference(){
     union(){
       build_component_body(component_width, component_height, component_depth, component_side_offset, component_up_offset);
+      build_ext_component_body(component_width, component_height, component_depth, component_side_offset, component_up_offset, 3.4);
       build_stopper(component_width, component_height, component_depth, component_side_offset, component_up_offset);
     }
     cut_top(component_width, component_height, component_depth, component_side_offset, component_up_offset);
@@ -463,6 +574,23 @@ module shelf_mount(component_width, component_height, component_depth, component
     cut_side_windows(component_width, component_height, component_depth, component_side_offset, component_up_offset, component_side_windows);
     cut_power_wire_holes(component_width, component_height, component_depth, component_side_offset, component_up_offset, front_wire_holes, component_wire_diameter);
   }
+}
+
+// Builds a mount with a drawer in it.
+module drawer_mount(component_width, component_height, component_depth, component_side_offset, component_up_offset, air_holes, component_side_windows) {
+  
+  difference(){
+    union(){
+      //build_component_body(component_width, component_height, component_depth, component_side_offset, component_up_offset);
+      build_ext_component_body(component_width, component_height, component_depth, component_side_offset, component_up_offset, 3.4);
+      build_drawer_stops(component_width, component_height, component_depth, component_side_offset, component_up_offset);
+      build_stopper(component_width, component_height, component_depth, component_side_offset, component_up_offset);
+      }
+    cut_air_holes(component_width, component_height, component_depth, component_side_offset, component_up_offset, air_holes);
+    cut_side_windows(component_width, component_height, component_depth, component_side_offset, component_up_offset, component_side_windows);
+  }
+  build_drawer_body(component_width, component_height, component_depth, component_side_offset, component_up_offset);
+}
 }
 // Keystone_jack_group: used to make the ports used to hold keystone jacks. lets you put up to 10 jacks per group.
 module keystone_jack_group(keystone_jack_group, keystone_jack_side_offset, keystone_jack_up_offset, keystone_jack_num, keystone_jack_I_rotate, keystone_jack_spaceing, keystone_jack_vertical){
@@ -475,11 +603,13 @@ module keystone_jack_group(keystone_jack_group, keystone_jack_side_offset, keyst
       for (i = [0:keystone_jack_num-1]) { // loop for making multible jacks
         translate([keystone_jack_side_offset + i*(keystone_x_spacing), -keystone_jack_up_offset + i*(keystone_y_spacing), 0]) 
         rotate([0,0,keystone_jack_I_rotate]){// rotate jacks individually
-          keystone();  
+          build_keystone();  
             }    
         }      
     }
 }
+
+// This module is used to switch between the diffrenet types of mounts 
 module build_mount(component, component_width, component_height, component_depth, component_side_offset, component_up_offset, front_wire_holes, component_wire_diameter, air_holes,component_90, component_side_windows) {
 
   turn90 = component_90 ? 90 : 0;
@@ -492,10 +622,14 @@ module build_mount(component, component_width, component_height, component_depth
     rotate([0,0,turn90])
     shelf_mount(component_width, component_height, component_depth, component_side_offset, component_up_offset, front_wire_holes, component_wire_diameter, air_holes, component_side_windows);
   }
+  if(component==3){
+    rotate([0,0,turn90])
+    drawer_mount(component_width, component_height, component_depth, component_side_offset, component_up_offset, air_holes, component_side_windows);
+  }
 }
 //***********************************Main Building Modules*********************************//
 //***********************************Final Building Modules*********************************//
-//  make_rack(): Main assembly - boolean structure
+// Main assembly - boolean structure
 module make_rack(){
   union(){
     front_panel();
@@ -513,8 +647,18 @@ module make_rack(){
 if ($preview) {
   rotate([-90,0,0])
     translate([0, -height/2, -component1_depth/2]){
-      make_rack();
+      difference(){
+        make_rack();
+        //translate([0, -50, -50])
+          //cube([200, 100, 200]);
       }
+    }
 } else {
-    make_rack();
+    difference(){
+      make_rack();
+      //translate([0, -50, -50])
+        //cube([200, 100, 200]);
+      //translate([-120, -25, 20])
+        //cube([150, 100, 50]);
+    }
 }
